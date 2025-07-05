@@ -97,12 +97,15 @@ BACK R : BTN_THUMBR
 ## CORE MOUSE MOVEMENTS
     - PEDAL BREAK : ABS_Z = SHRINK RADIUS 
     - PEDAL GAS : ABS_RZ = ENLARGE RADIUS 
+    - BACK L + BACK R + PEDAL GAS : ABS_RZ = MAX RADIUS
+    - BACK L + BACK R + PEDAL BREAK : ABS_Z = MIN RADIUS
+
 
 
 
     - OPTION BUTTON: BTN_SELECT + SHARE BUTTON: find this--- = CHANGE SIDE OFFSET
 
-    - D-PAD = pi radian depending on dpad direction
+    - D-PAD = pi radian depending on dpad direction -0-
 
     - PADDLE L + BACK R + D-PAD = absolute mouse movement
 
