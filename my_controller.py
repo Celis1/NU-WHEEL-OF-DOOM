@@ -90,119 +90,212 @@ class Controller(GameScreenMouse):
     def get_action(self):
 
         # TODO: change the later ifs into elifs because we dont want to trigger multiple actions at once
-        
+        # TODO: WE GOTTA FIND A BETTER SOLUTION THAN 1000000 RETURNS
+
         # --------- COMBOS PADDLE L ---------
         if self.current_event['BTN_TL'] == 1:
-            if self.current_event['BTN_THUMBL'] ==1:
+            
+            if self.current_event['BTN_THUMBR'] == 1:
+                if self.current_event['ABS_HAT0Y'] == -1:
+                    self.absolute_mouse_move()
+                    return
+                elif self.current_event['ABS_HAT0Y'] == 1:
+                    self.absolute_mouse_move()
+                    return
+                elif self.current_event['ABS_HAT0X'] == 1:
+                    self.absolute_mouse_move()
+                    return
+                elif self.current_event['ABS_HAT0X'] == -1:
+                    self.absolute_mouse_move()
+                    return
+
+
+            elif self.current_event['BTN_THUMBL'] ==1:
                 self.click_mouse(button='left')
+                return
 
             elif self.current_event['BTN_TR'] == 1:
                 self.button_press('`')
+                return
 
             elif self.current_event['BTN_NORTH'] == 1:
                 self.button_press('d')
+                return
 
             elif self.current_event['BTN_EAST'] == 1:
                 self.button_press('f')
+                return
 
-            elif self.current_event['ABS_HAT0Y'] == -1:
-                self.button_press('f2')
-                if self.current_event['BTN_SELECT'] == 1:
-                    self.button_press('k')
+            # TODO: CHANGE VIEW ALLY MACRO
+            # elif self.current_event['ABS_HAT0Y'] == -1:
+            #     self.button_press('f2')
+            #     if self.current_event['BTN_SELECT'] == 1:
+            #         self.button_press('k')
             
-            elif self.current_event['ABS_HAT0X'] == 1:
-                self.button_press('f3')
-                if self.current_event['BTN_SELECT'] == 1:
-                    self.button_press('k')
+            # elif self.current_event['ABS_HAT0X'] == 1:
+            #     self.button_press('f3')
+            #     if self.current_event['BTN_SELECT'] == 1:
+            #         self.button_press('k')
 
-            elif self.current_event['ABS_HAT0Y'] == 1:
-                self.button_press('f4')
-                if self.current_event['BTN_SELECT'] == 1:
-                    self.button_press('k')
+            # elif self.current_event['ABS_HAT0Y'] == 1:
+            #     self.button_press('f4')
+            #     if self.current_event['BTN_SELECT'] == 1:
+            #         self.button_press('k')
 
-            elif self.current_event['ABS_HAT0X'] == -1:
-                self.button_press('f5')
-                if self.current_event['BTN_SELECT'] == 1:
-                    self.button_press('k')
+            # elif self.current_event['ABS_HAT0X'] == -1:
+            #     self.button_press('f5')
+            #     if self.current_event['BTN_SELECT'] == 1:
+            #         self.button_press('k')
 
 
         # --------- COMBOS BACK L ---------
         if self.current_event['BTN_THUMBL'] == 1:
+
+            # combos with BACK R
+            if self.current_event['BTN_THUMBR'] == 1:
+                if self.current_event['ABS_RZ'] != 0:
+                    self.set_radius_max()
+                    return
+                
+                elif self.current_event['ABS_Z'] != 0:
+                    self.set_radius_min()
+                    return
+
+
             if self.current_event['BTN_SOUTH'] == 1:
-                self.multi_button_press('q')
+                self.multi_button_press('r')
+                return
 
             elif self.current_event['BTN_NORTH'] == 1:
                 self.multi_button_press('w')
+                return
 
             elif self.current_event['BTN_EAST'] == 1:
                 self.multi_button_press('e')
+                return
 
             elif self.current_event['BTN_WEST'] == 1:
-                self.multi_button_press('r')
+                self.multi_button_press('q')
+                return
                 
 
             elif self.current_event['ABS_HAT0X'] == 1:
                 if self.current_event['BTN_THUMBR'] == 1:
                     self.multi_button_press(4)
+                    return
                 else:
                     # TODO: WE WANT SHIFT CLICK FUNCTION
                     self.button_press('`')
+                    return
 
             elif self.current_event['ABS_HAT0Y'] == -1:
                 if self.current_event['BTN_THUMBR'] == 1:
                     self.button_press('t')
+                    return
                 else:
                     self.button_press('o')
+                    return
             
             elif self.current_event['ABS_HAT0X'] == -1:
                 self.button_press('p')
+                return
             
             elif self.current_event['ABS_HAT0Y'] == 1:
                 self.button_press('b')
+                return
 
         # --------- COMBOS BACK R ---------
         if self.current_event['BTN_THUMBR'] == 1:
             if self.current_event['ABS_HAT0X'] == 1:
                 self.button_press('2')
+                return
 
             elif self.current_event['ABS_HAT0Y'] == 1:
                 self.button_press('3')
+                return
 
             elif self.current_event['ABS_HAT0X'] == -1:
                 self.button_press('4')
+                return
             
             elif self.current_event['ABS_HAT0Y'] == -1:
                 self.button_press('s')
-
+                return
 
         # --------- CORE BUTTONS ---------
-        if self.current_event['BTN_TR'] == 1:
+        elif self.current_event['BTN_TR'] == 1:
             self.click_mouse(button='right')
+            return
 
-        if self.current_event['BTN_SOUTH'] == 1:
+        elif self.current_event['BTN_SOUTH'] == 1:
             self.button_press('r')
-        if self.current_event['BTN_NORTH'] == 1:
+            return
+        elif self.current_event['BTN_NORTH'] == 1:
             self.button_press('w')
-        if self.current_event['BTN_EAST'] == 1:
+            return
+        elif self.current_event['BTN_EAST'] == 1:
             self.button_press('e')
-        if self.current_event['BTN_WEST'] == 1:
+            return
+        elif self.current_event['BTN_WEST'] == 1:
             self.button_press('q')
+            return
+
+        # --------- DPAD ---------
+        elif self.current_event['ABS_HAT0Y'] == -1:
+            self.quarter_step_mouse('N')
+            return
+        elif self.current_event['ABS_HAT0Y'] == 1:
+            self.quarter_step_mouse('S')
+            return
+        elif self.current_event['ABS_HAT0X'] == 1:
+            self.quarter_step_mouse('E')
+            return
+        elif self.current_event['ABS_HAT0X'] == -1:
+            self.quarter_step_mouse('W')
+            return
 
         # play the horn sound
-        if self.current_event['BTN_SELECT'] == 1:
-            self.play_horn_sound()
-            self.button_press('u')
+        elif self.current_event['BTN_SELECT'] == 1:
+            if self.current_event['BTN_THUMBL'] == 1:
+                if self.current_event['BTN_START'] == 1:
+                    print("Swapping offset side")
+                    self.swap_offset_side()
+                    return
+                
+            elif self.current_event['BTN_TL'] == 1:
+                if self.current_event['BTN_START'] == 1:
+                    print('UNLOCKING CAMERA')
+                    self.button_press('space')
+                    return
+            else:
+                self.play_horn_sound()
+                self.button_press('u')
+                return
 
         # flame macro
-        if self.current_event['BTN_START'] == 1:
+        elif self.current_event['BTN_START'] == 1:
             print("All chat flame macro triggered")
             self.flame_macro()
+            return
         
         # --- triggers ---
         if self.current_event['ABS_RZ'] != 0:
             inc_val = self.current_event['ABS_RZ'] // 30  # Scale to a reasonable increment
             self.grow_radius(inc_val)
+            return
            
         if self.current_event['ABS_Z'] != 0:
             dec_value = self.current_event['ABS_Z'] // 30 # Scale to a reasonable decrement
             self.shrink_radius(dec_value)
+            return
+
+
+if __name__ == "__main__":
+    controller = Controller()
+    
+    while 1:
+        events = controller.read()
+        if controller.current_event['BTN_NORTH'] == 1:
+            controller._center_mouse()
+            print("Centering mouse...")
+
