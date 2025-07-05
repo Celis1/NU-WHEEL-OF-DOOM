@@ -44,52 +44,56 @@
     - ctrl + 6 mastery flex
     - t thumbs up emote
 
+PADDLE L : BTN_TL
+PADDLE R : BTN_TR
+BACK L : BTN_THUMBL
+BACK R : BTN_THUMBR
 
 ## - Button mappings to my steering wheel 
-    - PADDLE R = right click
-    - PADDLE L + BACK L = left click
-    - PADDLE L + Paddle R = attack move 
+    - PADDLE R = right click -0-
+    - PADDLE L + BACK L = left click -0-
+    - PADDLE L + Paddle R = ` attack move -0-
 
-    - B BUTTON: BTN_SOUTH = q ability
-    - X BUTTON: BTN_NORTH = w ability
-    - A BUTTON: BTN_EAST = e ability
-    - Y BUTTON: BTN_WEST = r ultimate ability
-    - PADDLE L + X BUTTON = d flash ability
-    - PADDLE L + A BUTTON = f smite ability
+    - B BUTTON: BTN_SOUTH = q ability -0-
+    - X BUTTON: BTN_NORTH = w ability -0-
+    - A BUTTON: BTN_EAST = e ability -0-
+    - Y BUTTON: BTN_WEST = r ultimate ability -0-
+    - PADDLE L + X BUTTON = d flash ability -0-
+    - PADDLE L + A BUTTON = f smite ability -0-
 
-    - BACK L + B BUTTON: BTN_SOUTH = lvl q ability 
-    - BACK L + X BUTTON: BTN_NORTH = lvl w ability
-    - BACK L + A BUTTON: BTN_EAST = lvl e ability
-    - BACK L + Y BUTTON: BTN_WEST = lvl r ability
+    - BACK L + B BUTTON: BTN_SOUTH = lvl q ability -0-
+    - BACK L + X BUTTON: BTN_NORTH = lvl w ability -0-
+    - BACK L + A BUTTON: BTN_EAST = lvl e ability -0-
+    - BACK L + Y BUTTON: BTN_WEST = lvl r ability -0-
 
-    - BACK R + D-PAD RIGHT: ABS_HAT0X 1 = item 2
-    - BACK R + D-PAD DOWN: ABS_HAT0Y 1 = item 3
-    - BACK R + D-PAD LEFT: ABS_HAT0X -1 = item 4 ward
+    - BACK R + D-PAD RIGHT: ABS_HAT0X 1 = item 2 -0-
+    - BACK R + D-PAD DOWN: ABS_HAT0Y 1 = item 3 -0-
+    - BACK R + D-PAD LEFT: ABS_HAT0X -1 = item 4 ward -0-
 
-    - BACK R + D-PAD UP: ABS_HAT0Y -1 = s stop moving
-    - BACK L + D-PAD RIGHT: ABS_HAT0X 1 = ` attack champion only
+    - BACK R + D-PAD UP: ABS_HAT0Y -1 = s stop moving -0-
+    - BACK L + D-PAD RIGHT: ABS_HAT0X 1 = ` attack champion only -0-
 
-    - OPTION BUTTON: BTN_SELECT = u ping on my way + horn
-    - PADDLE L + OPTION BUTTON: BTN_SELECT + D-PAD(ANY DIRECTION) = ping retreat
+    - OPTION BUTTON: BTN_SELECT = u ping on my way + horn -0-
+    - PADDLE L + D-PAD(ANY DIRECTION) + OPTION BUTTON: BTN_SELECT = ping retreat -0-
 
-    - BACK L + D-PAD UP: ABS_HAT0Y -1 = tab leaderboard
-    - BACK L + D-PAD LEFT: ABS_HAT0X -1 = p shop
-    - BACK L + D-PAD DOWN: ABS_HAT0Y 1 = b recall
+    - BACK L + D-PAD UP: ABS_HAT0Y -1 = tab leaderboard -0-
+    - BACK L + D-PAD LEFT: ABS_HAT0X -1 = p shop -0-
+    - BACK L + D-PAD DOWN: ABS_HAT0Y 1 = b recall -0-
 
-    - OPTION BUTTON: BTN_SELECT + D-PAD UP: ABS_HAT0Y -1 = f1 view ally 1
-    - OPTION BUTTON: BTN_SELECT + D-PAD RIGHT: ABS_HAT0X 1 = f2 view ally 2
-    - OPTION BUTTON: BTN_SELECT + D-PAD DOWN: ABS_HAT0Y 1 = f3 view ally 3
-    - OPTION BUTTON: BTN_SELECT + D-PAD LEFT: ABS_HAT0X -1 = f4 view ally 4
+    - PADDLE L + D-PAD UP: ABS_HAT0Y -1 = f2 view ally 1 -0-
+    - PADDLE L + D-PAD RIGHT: ABS_HAT0X 1 = f3 view ally 2 -0-
+    - PADDLE L + D-PAD DOWN: ABS_HAT0Y 1 = f4 view ally 3 -0-
+    - PADDLE L + D-PAD LEFT: ABS_HAT0X -1 = f5 view ally 4 -0-
 
 
     (OPTIONALS)
 
-    - BACK L + BACK R +  D-PAD RIGHT: ABS_HAT0X 1 = laugh emote
-    - BACK L + BACK R + D-PAD UP: ABS_HAT0Y -1 = t thumbs up emote
+    - BACK L + BACK R +  D-PAD RIGHT: ABS_HAT0X 1 = laugh emote -0-
+    - BACK L + BACK R + D-PAD UP: ABS_HAT0Y -1 = t thumbs up emote -0-
 
 ## CORE MOUSE MOVEMENTS
-    - PEDAL BREAK = SHRINK RADIUS
-    - PEDAL GAS = ENLARGE RADIUS
+    - PEDAL BREAK : ABS_Z = SHRINK RADIUS -0-
+    - PEDAL GAS : ABS_RZ = ENLARGE RADIUS -0-
 
     - D-PAD = pi radian depending on dpad direction
 

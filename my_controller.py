@@ -74,7 +74,7 @@ class Controller(GameScreenMouse):
         def button_press_thread():
             """Press the button."""
             pydirectinput.press(button)
-        """Simulate a button press."""
+
         threading.Thread(target=button_press_thread).start()
 
     def multi_button_press(self, button):
@@ -83,114 +83,122 @@ class Controller(GameScreenMouse):
             pydirectinput.keyDown('ctrl')
             pydirectinput.press(button)
             pydirectinput.keyUp('ctrl')
-
-        """Simulate a multi-button press."""
+        
         threading.Thread(target=multi_button_press_thread).start()
 
 
     def get_action(self):
         
-        # --------- COMBOS WITH FRONT L ---------
+        # --------- COMBOS PADDLE L ---------
         if self.current_event['BTN_TL'] == 1:
-            if self.current_event['BTN_NORTH'] == 1:
+            if self.current_event['BTN_THUMBL'] ==1:
+                self.click_mouse(button='left')
+
+            elif self.current_event['BTN_TR'] == 1:
+                self.button_press('`')
+
+            elif self.current_event['BTN_NORTH'] == 1:
                 self.button_press('d')
-                # return 'FLASH'
-            
+
             elif self.current_event['BTN_EAST'] == 1:
                 self.button_press('f')
-                # return 'SMITE'
 
-            elif self.current_event['BTN_SOUTH'] == 1:
-                self.button_press('s')
-                # return 'STOP_MOVING'
-
-            elif self.current_event['BTN_WEST'] == 1:
-                self.button_press('4')
-                # return 'WARD_SLOT'
-
-        # --------- COMBOS WITH FRONT R ---------
-        if self.current_event['BTN_TL'] == 1:
-            if self.current_event['ABS_HAT0X'] == -1:
-                self.button_press('1')
             elif self.current_event['ABS_HAT0Y'] == -1:
-                self.button_press('2')
-            elif self.current_event['ABS_HAT0X'] == 1:
-                self.button_press('3')
-            elif self.current_event['ABS_HAT0Y'] == 1:
-                self.button_press('4')
-
-        # --------- COMBOS WITH BACK R ---------
-        if self.current_event['BTN_THUMBR'] == 1:
-            if self.current_event['ABS_HAT0X'] == -1:
-                # return 'mouse_left'
-                pass
+                self.button_press('f2')
+                if self.current_event['BTN_SELECT'] == 1:
+                    self.button_press('k')
             
             elif self.current_event['ABS_HAT0X'] == 1:
-                # return 'mouse_right'
-                pass
-            
-            elif self.current_event['ABS_HAT0Y'] == -1:
-                # self.center_mouse()
-                pass
-                # return 'mouse_up'
+                self.button_press('f3')
+                if self.current_event['BTN_SELECT'] == 1:
+                    self.button_press('k')
 
             elif self.current_event['ABS_HAT0Y'] == 1:
-                # return 'mouse_down'
-                pass
+                self.button_press('f4')
+                if self.current_event['BTN_SELECT'] == 1:
+                    self.button_press('k')
 
-        # --------- COMBOS WITH BACK L ---------
+            elif self.current_event['ABS_HAT0X'] == -1:
+                self.button_press('f5')
+                if self.current_event['BTN_SELECT'] == 1:
+                    self.button_press('k')
+
+
+        # --------- COMBOS BACK L ---------
         if self.current_event['BTN_THUMBL'] == 1:
-            if self.current_event['BTN_NORTH'] == 1:
+            if self.current_event['BTN_SOUTH'] == 1:
                 self.multi_button_press('q')
+
+            elif self.current_event['BTN_NORTH'] == 1:
+                self.multi_button_press('w')
 
             elif self.current_event['BTN_EAST'] == 1:
                 self.multi_button_press('e')
 
-            elif self.current_event['BTN_SOUTH'] == 1:
+            elif self.current_event['BTN_WEST'] == 1:
                 self.multi_button_press('r')
 
-            elif self.current_event['BTN_WEST'] == 1:
-                self.multi_button_press('d')
+            elif self.current_event['ABS_HAT0X'] == 1:
+                if self.current_event['BTN_THUMBR'] == 1:
+                    self.multi_button_press(4)
+                else:
+                    self.button_press('`')
 
-        # --------- PADDLES ---------
-        if self.current_event['BTN_TL'] == 1:
-            # self.center_mouse()
-            pass
-        
+            elif self.current_event['ABS_HAT0Y'] == -1:
+                if self.current_event['BTN_THUMBR'] == 1:
+                    self.button_press('t')
+                else:
+                    self.button_press('tab')
+            
+            elif self.current_event['ABS_HAT0X'] == -1:
+                self.button_press('p')
+            
+            elif self.current_event['ABS_HAT0Y'] == 1:
+                self.button_press('b')
+
+        # --------- COMBOS BACK R ---------
+        if self.current_event['BTN_THUMBR'] == 1:
+            if self.current_event['ABS_HAT0X'] == 1:
+                self.button_press('2')
+
+            elif self.current_event['ABS_HAT0Y'] == 1:
+                self.button_press('3')
+
+            elif self.current_event['ABS_HAT0X'] == -1:
+                self.button_press('4')
+            
+            elif self.current_event['ABS_HAT0Y'] == -1:
+                self.button_press('s')
+
+
+        # --------- CORE BUTTONS ---------
         if self.current_event['BTN_TR'] == 1:
             self.click_mouse(button='right')
 
-        # --------- BUTTONS ---------
-        if self.current_event['BTN_NORTH'] == 1:
-            self.button_press('w')
-        
         if self.current_event['BTN_SOUTH'] == 1:
             self.button_press('q')
-        
+        if self.current_event['BTN_NORTH'] == 1:
+            self.button_press('w')
         if self.current_event['BTN_EAST'] == 1:
             self.button_press('e')
-        
         if self.current_event['BTN_WEST'] == 1:
             self.button_press('r')
 
-        # --------- TRIGGERS ---------
+        # play the horn sound
+        if self.current_event['BTN_SELECT'] == 1:
+            self.play_horn_sound()
+            self.button_press('u')
+
+        # flame macro
+        if self.current_event['BTN_START'] == 1:
+            print("All chat flame macro triggered")
+            self.flame_macro()
+        
+        # --- triggers ---
         if self.current_event['ABS_RZ'] != 0:
             inc_val = self.current_event['ABS_RZ'] // 10  # Scale to a reasonable increment
             self.grow_radius(inc_val)
-            # return 'enlarge_circle_radius'
+           
         if self.current_event['ABS_Z'] != 0:
             dec_value = self.current_event['ABS_Z'] // 10 # Scale to a reasonable decrement
             self.shrink_radius(dec_value)
-            # return 'reduce_circle_radius'
-
-        # --------- WINDOWS BUTTONS ---------
-        if self.current_event['BTN_SELECT'] == 1:
-            # play the horn sound
-            self.play_horn_sound()
-            self.button_press('u')  # ping omw button
-            
-            # return 'ping_horn'
-        if self.current_event['BTN_START'] == 1:
-            # return 'all_chat_flame_macro'
-            print("All chat flame macro triggered")
-            self.flame_macro()
