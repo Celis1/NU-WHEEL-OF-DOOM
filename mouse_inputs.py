@@ -7,6 +7,9 @@ import sounddevice as sd
 import soundfile as sf
 import threading
 
+# TODO: HORN IS STILL BLOCKING
+
+# TODO: MOUSE MOVEMENT STUFF
        
 class GameScreenMouse:
     def __init__(self):
@@ -19,6 +22,7 @@ class GameScreenMouse:
         self.max_radius = 450
 
         # offsets and dead zone
+        # TODO: WE NEED TO CHANGE OFFSET BASED ON WHICH SIDE WE ARE ON
         self.offset_x = -80
         self.offset_y = -80
         self.dead_zone = 8192

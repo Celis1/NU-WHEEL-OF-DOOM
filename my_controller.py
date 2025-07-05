@@ -88,6 +88,8 @@ class Controller(GameScreenMouse):
 
 
     def get_action(self):
+
+        # TODO: change the later ifs into elifs because we dont want to trigger multiple actions at once
         
         # --------- COMBOS PADDLE L ---------
         if self.current_event['BTN_TL'] == 1:

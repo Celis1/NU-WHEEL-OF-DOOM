@@ -12,6 +12,7 @@ from my_controller import Controller
 class WheelOfDoom(Controller):
     pass
 
+# TODO: controller doesnt update if there no change in input
 
 if __name__ == "__main__":
     controller = Controller()

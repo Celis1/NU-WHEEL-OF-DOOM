@@ -50,50 +50,57 @@ BACK L : BTN_THUMBL
 BACK R : BTN_THUMBR
 
 ## - Button mappings to my steering wheel 
-    - PADDLE R = right click -0-
-    - PADDLE L + BACK L = left click -0-
-    - PADDLE L + Paddle R = ` attack move -0-
+    - PADDLE R = right click 
+    - PADDLE L + BACK L = left click 
+    - PADDLE L + Paddle R = ` attack move 
 
-    - B BUTTON: BTN_WEST = q ability -0-
-    - X BUTTON: BTN_NORTH = w ability -0-
-    - A BUTTON: BTN_EAST = e ability -0-
-    - Y BUTTON: BTN_SOUTH = r ultimate ability -0-
-    - PADDLE L + X BUTTON = d flash ability -0-
-    - PADDLE L + A BUTTON = f smite ability -0-
+    - B BUTTON: BTN_WEST = q ability 
+    - X BUTTON: BTN_NORTH = w ability 
+    - A BUTTON: BTN_EAST = e ability 
+    - Y BUTTON: BTN_SOUTH = r ultimate ability 
+    - PADDLE L + X BUTTON = d flash ability 
+    - PADDLE L + A BUTTON = f smite ability 
 
-    - BACK L + B BUTTON: BTN_SOUTH = lvl q ability -0-
-    - BACK L + X BUTTON: BTN_NORTH = lvl w ability -0-
-    - BACK L + A BUTTON: BTN_EAST = lvl e ability -0-
-    - BACK L + Y BUTTON: BTN_WEST = lvl r ability -0-
+    - BACK L + B BUTTON: BTN_SOUTH = lvl q ability 
+    - BACK L + X BUTTON: BTN_NORTH = lvl w ability 
+    - BACK L + A BUTTON: BTN_EAST = lvl e ability 
+    - BACK L + Y BUTTON: BTN_WEST = lvl r ability 
 
-    - BACK R + D-PAD RIGHT: ABS_HAT0X 1 = item 2 -0-
-    - BACK R + D-PAD DOWN: ABS_HAT0Y 1 = item 3 -0-
-    - BACK R + D-PAD LEFT: ABS_HAT0X -1 = item 4 ward -0-
+    - BACK R + D-PAD RIGHT: ABS_HAT0X 1 = item 2 
+    - BACK R + D-PAD DOWN: ABS_HAT0Y 1 = item 3 
+    - BACK R + D-PAD LEFT: ABS_HAT0X -1 = item 4 ward 
 
-    - BACK R + D-PAD UP: ABS_HAT0Y -1 = s stop moving -0-
-    - BACK L + D-PAD RIGHT: ABS_HAT0X 1 = ` attack champion only -0-
+    - BACK R + D-PAD UP: ABS_HAT0Y -1 = s stop moving 
+    - BACK L + D-PAD RIGHT: ABS_HAT0X 1 = ` attack champion only -!-(REMOVE THIS ITS OUR PADDLE L + PADDLE R)
 
-    - OPTION BUTTON: BTN_SELECT = u ping on my way + horn -0-
-    - PADDLE L + D-PAD(ANY DIRECTION) + OPTION BUTTON: BTN_SELECT = ping retreat -0-
+    - OPTION BUTTON: BTN_SELECT = u ping on my way + horn 
+    - PADDLE L + D-PAD(ANY DIRECTION) + OPTION BUTTON: BTN_SELECT = ping retreat 
 
-    - BACK L + D-PAD UP: ABS_HAT0Y -1 = tab leaderboard -0-
-    - BACK L + D-PAD LEFT: ABS_HAT0X -1 = p shop -0-
-    - BACK L + D-PAD DOWN: ABS_HAT0Y 1 = b recall -0-
+    - BACK L + D-PAD UP: ABS_HAT0Y -1 = tab leaderboard 
+    - BACK L + D-PAD LEFT: ABS_HAT0X -1 = p shop 
+    - BACK L + D-PAD DOWN: ABS_HAT0Y 1 = b recall 
 
-    - PADDLE L + D-PAD UP: ABS_HAT0Y -1 = f2 view ally 1 -0-
-    - PADDLE L + D-PAD RIGHT: ABS_HAT0X 1 = f3 view ally 2 -0-
-    - PADDLE L + D-PAD DOWN: ABS_HAT0Y 1 = f4 view ally 3 -0-
-    - PADDLE L + D-PAD LEFT: ABS_HAT0X -1 = f5 view ally 4 -0-
+
+    
+    [REVISE THIS WE WANT COMBO DPAD BUTTON TO FREE UP PADDLE L WITH DPAD]
+    - PADDLE L + D-PAD UP: ABS_HAT0Y -1 = f2 view ally 1 
+    - PADDLE L + D-PAD RIGHT: ABS_HAT0X 1 = f3 view ally 2 
+    - PADDLE L + D-PAD DOWN: ABS_HAT0Y 1 = f4 view ally 3 
+    - PADDLE L + D-PAD LEFT: ABS_HAT0X -1 = f5 view ally 4 
 
 
     (OPTIONALS)
 
-    - BACK L + BACK R +  D-PAD RIGHT: ABS_HAT0X 1 = laugh emote -0-
-    - BACK L + BACK R + D-PAD UP: ABS_HAT0Y -1 = t thumbs up emote -0-
+    - BACK L + BACK R +  D-PAD RIGHT: ABS_HAT0X 1 = laugh emote 
+    - BACK L + BACK R + D-PAD UP: ABS_HAT0Y -1 = t thumbs up emote 
 
 ## CORE MOUSE MOVEMENTS
-    - PEDAL BREAK : ABS_Z = SHRINK RADIUS -0-
-    - PEDAL GAS : ABS_RZ = ENLARGE RADIUS -0-
+    - PEDAL BREAK : ABS_Z = SHRINK RADIUS 
+    - PEDAL GAS : ABS_RZ = ENLARGE RADIUS 
+
+
+
+    - OPTION BUTTON: BTN_SELECT + SHARE BUTTON: find this--- = CHANGE SIDE OFFSET
 
     - D-PAD = pi radian depending on dpad direction
 
