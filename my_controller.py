@@ -150,6 +150,7 @@ class Controller(GameScreenMouse):
 
         # --------- COMBOS BACK L ---------
         if self.current_event['BTN_THUMBL'] == 1:
+
             # combos with BACK R
             if self.current_event['BTN_THUMBR'] == 1:
                 if self.current_event['ABS_RZ'] != 0:
@@ -222,7 +223,7 @@ class Controller(GameScreenMouse):
                 return
 
         # --------- CORE BUTTONS ---------
-        if self.current_event['BTN_TR'] == 1:
+        elif self.current_event['BTN_TR'] == 1:
             self.click_mouse(button='right')
             return
 
@@ -252,13 +253,24 @@ class Controller(GameScreenMouse):
         elif self.current_event['ABS_HAT0X'] == -1:
             self.quarter_step_mouse('W')
             return
-        
 
         # play the horn sound
         elif self.current_event['BTN_SELECT'] == 1:
-            self.play_horn_sound()
-            self.button_press('u')
-            return
+            if self.current_event['BTN_THUMBL'] == 1:
+                if self.current_event['BTN_START'] == 1:
+                    print("Swapping offset side")
+                    self.swap_offset_side()
+                    return
+                
+            elif self.current_event['BTN_TL'] == 1:
+                if self.current_event['BTN_START'] == 1:
+                    print('UNLOCKING CAMERA')
+                    self.button_press('space')
+                    return
+            else:
+                self.play_horn_sound()
+                self.button_press('u')
+                return
 
         # flame macro
         elif self.current_event['BTN_START'] == 1:
@@ -276,3 +288,14 @@ class Controller(GameScreenMouse):
             dec_value = self.current_event['ABS_Z'] // 30 # Scale to a reasonable decrement
             self.shrink_radius(dec_value)
             return
+
+
+if __name__ == "__main__":
+    controller = Controller()
+    
+    while 1:
+        events = controller.read()
+        if controller.current_event['BTN_NORTH'] == 1:
+            controller._center_mouse()
+            print("Centering mouse...")
+

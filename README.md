@@ -102,13 +102,13 @@ BACK R : BTN_THUMBR
 
 
 
+    - PADDLE L + OPTION BUTTON: BTN_SELECT + SHARE BUTTON: BTN_START = space LOCK CAMERA
+    - BACK L + OPTION BUTTON: BTN_SELECT + SHARE BUTTON: BTN_START = CHANGE SIDE OFFSET
 
-    - OPTION BUTTON: BTN_SELECT + SHARE BUTTON: find this--- = CHANGE SIDE OFFSET
 
     - D-PAD = pi radian depending on dpad direction -0-
 
     - PADDLE L + BACK R + D-PAD = absolute mouse movement
-
     - PADDLE L + B BUTTON: BTN_SOUTH + D-PAD(ANY DIRECTION) = click and drag
 
 

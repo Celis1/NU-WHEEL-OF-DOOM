@@ -14,7 +14,7 @@ class GameScreenMouse:
         self.max_screen_width, self.max_screen_height = pyautogui.size()
 
         # radius for mouse movement
-        self.default_radius = 110
+        self.default_radius = 90
         self.current_radius = self.default_radius
         self.max_radius = 450
         self.current_angle = math.pi/2
@@ -22,15 +22,20 @@ class GameScreenMouse:
 
         self.curr_radian_val = 0.0
 
-        # offsets and dead zone
-        # TODO: WE NEED TO CHANGE OFFSET BASED ON WHICH SIDE WE ARE ON
-        self.offset_x = -80
-        self.offset_y = -80
-        self.dead_zone = 8192
+        # offsets per side
+        self.offset_x = -90
+        self.offset_y = -50
+        self.curr_side = 'blue'
+        self.offset_blue = [-90, -50]
+        self.offset_red = [90, -200]
 
         # champion center position
         self.center_x = (self.max_screen_width // 2) + self.offset_x
         self.center_y = (self.max_screen_height // 2) + self.offset_y
+
+    def _center_mouse(self):
+        ''' ONLY FOR TESTING PURPOSES '''
+        self.move_mouse(self.center_x, self.center_y)
 
     def radians_to_mouse_position(self, relative_radians, center_x, 
                                   center_y, radius, 
@@ -131,6 +136,18 @@ class GameScreenMouse:
         self.current_radius = self.default_radius
         self.rotate_mouse(self.current_radius, 
                           starting_angle_radians=self.current_angle)
+        
+    def swap_offset_side(self):
+        if self.curr_side == 'blue':
+            self.offset_x, self.offset_y = self.offset_red
+            self.curr_side = 'red'
+        else:
+            self.offset_x, self.offset_y = self.offset_blue
+            self.curr_side = 'blue'
+
+        self.center_x = (self.max_screen_width // 2) + self.offset_x
+        self.center_y = (self.max_screen_height // 2) + self.offset_y
+        
 
     def move_mouse(self, x, y):
         def move_mouse_thread():

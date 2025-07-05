@@ -24,6 +24,9 @@ if __name__ == "__main__":
     temp.daemon = True  # This line makes it exit when main program exits
     temp.start()
 
+    # TODO : only updates or changes to inputs should added to a queue to read
+    # TODO : AND OUR READ FUNCTION WILL READ THE QUEUE INSTEAD OF THE DEVICE DIRECTLY
+
     print("Starting Wheel of Doom controller...")
     try:
         while True:
@@ -33,6 +36,8 @@ if __name__ == "__main__":
             if current_time - last_frame_time >= frame_time:
                 controller.rotate_mouse(controller.current_event['ABS_X'])
                 controller.get_action()
+                # print(controller.current_event)
+              
 
                 last_frame_time = current_time
     except KeyboardInterrupt:
