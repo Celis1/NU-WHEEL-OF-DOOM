@@ -54,10 +54,10 @@ BACK R : BTN_THUMBR
     - PADDLE L + BACK L = left click -0-
     - PADDLE L + Paddle R = ` attack move -0-
 
-    - B BUTTON: BTN_SOUTH = q ability -0-
+    - B BUTTON: BTN_WEST = q ability -0-
     - X BUTTON: BTN_NORTH = w ability -0-
     - A BUTTON: BTN_EAST = e ability -0-
-    - Y BUTTON: BTN_WEST = r ultimate ability -0-
+    - Y BUTTON: BTN_SOUTH = r ultimate ability -0-
     - PADDLE L + X BUTTON = d flash ability -0-
     - PADDLE L + A BUTTON = f smite ability -0-
 

@@ -70,7 +70,7 @@ class Controller(GameScreenMouse):
 
         return self.current_event
     
-    def button_press(self, button):
+    def button_press(self, button, key_down=False):
         def button_press_thread():
             """Press the button."""
             pydirectinput.press(button)
@@ -137,18 +137,20 @@ class Controller(GameScreenMouse):
 
             elif self.current_event['BTN_WEST'] == 1:
                 self.multi_button_press('r')
+                
 
             elif self.current_event['ABS_HAT0X'] == 1:
                 if self.current_event['BTN_THUMBR'] == 1:
                     self.multi_button_press(4)
                 else:
+                    # TODO: WE WANT SHIFT CLICK FUNCTION
                     self.button_press('`')
 
             elif self.current_event['ABS_HAT0Y'] == -1:
                 if self.current_event['BTN_THUMBR'] == 1:
                     self.button_press('t')
                 else:
-                    self.button_press('tab')
+                    self.button_press('o')
             
             elif self.current_event['ABS_HAT0X'] == -1:
                 self.button_press('p')
@@ -176,13 +178,13 @@ class Controller(GameScreenMouse):
             self.click_mouse(button='right')
 
         if self.current_event['BTN_SOUTH'] == 1:
-            self.button_press('q')
+            self.button_press('r')
         if self.current_event['BTN_NORTH'] == 1:
             self.button_press('w')
         if self.current_event['BTN_EAST'] == 1:
             self.button_press('e')
         if self.current_event['BTN_WEST'] == 1:
-            self.button_press('r')
+            self.button_press('q')
 
         # play the horn sound
         if self.current_event['BTN_SELECT'] == 1:
@@ -196,9 +198,9 @@ class Controller(GameScreenMouse):
         
         # --- triggers ---
         if self.current_event['ABS_RZ'] != 0:
-            inc_val = self.current_event['ABS_RZ'] // 10  # Scale to a reasonable increment
+            inc_val = self.current_event['ABS_RZ'] // 30  # Scale to a reasonable increment
             self.grow_radius(inc_val)
            
         if self.current_event['ABS_Z'] != 0:
-            dec_value = self.current_event['ABS_Z'] // 10 # Scale to a reasonable decrement
+            dec_value = self.current_event['ABS_Z'] // 30 # Scale to a reasonable decrement
             self.shrink_radius(dec_value)
