@@ -1,57 +1,6 @@
-# TODO:
-- MISSING BUTTONS(SHOP BUTTON, TAB BUTTON)
+# Core Button Mapping
 
-### - PADDLES
-LEFT PADDLE: BTN_TL = MOUSE CENTER
-RIGHT PADDLE: BTN_TR = RIGHT CLICK
-
-### - D-PAD
-D-PAD LEFT: ABS_HAT0X -1, RIGHT: ABS_HAT0X 1 , UP: ABS_HAT0Y -1, DOWN: ABS_HAT0Y 1 = mouse cardinal directions for mouse postion
-
-### - BUTTONS
-X BUTTON: BTN_NORTH = w ability
-B BUTTON: BTN_SOUTH = q ability
-A BUTTON: BTN_EAST = e ability
-Y BUTTON: BTN_WEST = r ultimate ability
-
-### - TRIGGERS
-GAS TRIGGER: ABS_RZ = ENLARGE CIRCLE RADIUS
-BREAK TRIGGER: ABS_Z = REDUCE CIRCLE RADIUS
-
-
-### - WINDOWS BUTTONS
-OPTION BUTTON: BTN_SELECT = HORN/PING BUTTON
-SHARE BUTTON: BTN_START = ALL CHAT FLAME MACRO 3x
-
-
-## - COMBINATIONS
-### - COMBOS WITH FRONT L
-[FRONT L: BTN_TL] + [X BUTTON: BTN_NORTH] = FLASH
-[FRONT L: BTN_TL] + [A BUTTON: BTN_EAST] = SMITE
-[FRONT L: BTN_TL] + [B BUTTON: BTN_SOUTH] = STOP MOVING
-[FRONT L: BTN_TL] + [Y BUTTON: BTN_WEST] = (mb5) ward slot
-
-[FRONT L: BTN_TL] + [RIGHT PADDLE: BTN_TR] = ATTACK CHAMP ONLY
-
-### - COMBOS WITH FRONT R
-[FRONT R: BTN_TR] + [D-PAD LEFT: ABS_HAT0X -1] = (q) item slot 1
-[FRONT R: BTN_TR] + [D-PAD UP: ABS_HAT0Y -1] =  (e) item slot 2
-[FRONT R: BTN_TR] + [D-PAD RIGHT: ABS_HAT0X 1] = (2) item slot 3
-[FRONT R: BTN_TR] + [D-PAD DOWN: ABS_HAT0Y 1] = (mb5) ward slot
-
-### - COMBOS WITH BACK R
-[BACK R: BTN_THUMBR] + D-PAD LEFT,RIGHT,UP,DOWN: MOUSE ABSOLUTE MOVEMENT 
-
-### - COMBOS WITH BACK L
-[BACK L: BTN_THUMBL] + [RIGHT PADDLE: BTN_TR]: LEFT CLICK
-[BACK L: BTN_THUMBL] + ANY BUTTON: LEVEL UP ABILITY
-
-
-
-
-# STARTING OVER-------
-
-## What we need
+## Abilities we need
     - right click
     - left click (optional)
     - shift + right click attack champion move (optional)
@@ -96,8 +45,7 @@ SHARE BUTTON: BTN_START = ALL CHAT FLAME MACRO 3x
     - t thumbs up emote
 
 
-## - mappings 
-
+## - Button mappings to my steering wheel 
     - PADDLE R = right click
     - PADDLE L + BACK L = left click
     - PADDLE L + Paddle R = attack move 
@@ -119,10 +67,10 @@ SHARE BUTTON: BTN_START = ALL CHAT FLAME MACRO 3x
     - BACK R + D-PAD LEFT: ABS_HAT0X -1 = item 4 ward
 
     - BACK R + D-PAD UP: ABS_HAT0Y -1 = s stop moving
-    - BACK L + D-PAD LEFT: ABS_HAT0X -1 = ` attack champion only
+    - BACK L + D-PAD RIGHT: ABS_HAT0X 1 = ` attack champion only
 
-    - OPTION BUTTON: BTN_SELECT = u ping on my way
-    - PADDLE L ... oriung reatereat
+    - OPTION BUTTON: BTN_SELECT = u ping on my way + horn
+    - PADDLE L + OPTION BUTTON: BTN_SELECT + D-PAD(ANY DIRECTION) = ping retreat
 
     - BACK L + D-PAD UP: ABS_HAT0Y -1 = tab leaderboard
     - BACK L + D-PAD LEFT: ABS_HAT0X -1 = p shop
@@ -135,11 +83,23 @@ SHARE BUTTON: BTN_START = ALL CHAT FLAME MACRO 3x
 
 
     (OPTIONALS)
-    - ctrl + 4 laugh emote
-    - ctrl + 6 mastery flex
-    - t thumbs up emote
+
+    - BACK L + BACK R +  D-PAD RIGHT: ABS_HAT0X 1 = laugh emote
+    - BACK L + BACK R + D-PAD UP: ABS_HAT0Y -1 = t thumbs up emote
+
+## CORE MOUSE MOVEMENTS
+    - PEDAL BREAK = SHRINK RADIUS
+    - PEDAL GAS = ENLARGE RADIUS
+
+    - D-PAD = pi radian depending on dpad direction
+
+    - PADDLE L + BACK R + D-PAD = absolute mouse movement
+
+    - PADDLE L + B BUTTON: BTN_SOUTH + D-PAD(ANY DIRECTION) = click and drag
 
 
 
 --- NOTE 
-PADDLE L + WEST BUTTON OR SOUTH BUTTON
+PADDLE L + WEST BUTTON
+BACK R + ANY CORE BUTTONS
+SHARE BUTTON + ANYTHING 
