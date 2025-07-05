@@ -5,9 +5,6 @@ import pydirectinput
 import time
 import math
 
-#TODO: PRODUCTION READY SCRIPT
-
-
 #CONSTANTS
 RADIUS = 300
 MAX_SCREEN_WIDTH, MAX_SCREEN_HEIGHT = pyautogui.size()
@@ -135,31 +132,26 @@ def main():
             if event.code == 'ABS_RZ':
                 if event.state == 1:
                     print("Right  trigger pressed")
-                    #TODO: function for enlarge circle radius
 
             if event.code == 'ABS_Z':
                 if event.state == 1:
                     print("Left trigger pressed")
-                    #TODO: function for reduce circle radius
 
 
             # ----- WINDOWS BUTTONS -----
             if event.code == 'BTN_SELECT':
                 if event.state == 1:
                     print("HORN HAS BEEN PRESSED")
-                    #TODO: function for horn
 
             if event.code == 'BTN_START':
                 if event.state == 1:
                     print("START BUTTON PRESSED")
-                    #TODO: all chat flame macro
 
             #----- COMBINATIONS -----
 
             # ---- STEERING WHEEL MOVEMENT ----
             # basic mouse movement
             if event.code == 'ABS_X':
-                #todo stuff
                 radian_val = abs_x_to_relative_radians(int(event.state))
                 X_POS, Y_POS = radians_to_mouse_position(radian_val)
                 pyautogui.moveTo(X_POS, Y_POS)

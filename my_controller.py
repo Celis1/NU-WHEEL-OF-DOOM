@@ -150,6 +150,17 @@ class Controller(GameScreenMouse):
 
         # --------- COMBOS BACK L ---------
         if self.current_event['BTN_THUMBL'] == 1:
+            # combos with BACK R
+            if self.current_event['BTN_THUMBR'] == 1:
+                if self.current_event['ABS_RZ'] != 0:
+                    self.set_radius_max()
+                    return
+                
+                elif self.current_event['ABS_Z'] != 0:
+                    self.set_radius_min()
+                    return
+
+
             if self.current_event['BTN_SOUTH'] == 1:
                 self.multi_button_press('r')
                 return
@@ -209,8 +220,6 @@ class Controller(GameScreenMouse):
             elif self.current_event['ABS_HAT0Y'] == -1:
                 self.button_press('s')
                 return
-            
-
 
         # --------- CORE BUTTONS ---------
         if self.current_event['BTN_TR'] == 1:

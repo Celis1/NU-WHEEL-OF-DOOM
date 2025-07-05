@@ -7,9 +7,6 @@ import sounddevice as sd
 import soundfile as sf
 import threading
 
-# TODO: HORN IS STILL BLOCKING
-
-# TODO: MOUSE MOVEMENT STUFF
        
 class GameScreenMouse:
     def __init__(self):
@@ -94,6 +91,7 @@ class GameScreenMouse:
         # Rotate the mouse to the new angle
         self.rotate_mouse(self.current_radius)
 
+    # TODO: GET ITEM SWAPPING FOR RANKED PLAY
     def absolute_mouse_move(self):
         # start by moving mouse to correct position
         items_cord_x = 1070
@@ -104,7 +102,6 @@ class GameScreenMouse:
 
     def grow_radius(self, increment=10):
         """Increase the radius for mouse movement."""
-        print(f"Current radius before increment: {self.current_radius}")
         self.current_radius += increment
         if self.current_radius > self.max_radius:
             self.current_radius = self.max_radius
@@ -113,16 +110,27 @@ class GameScreenMouse:
 
         self.rotate_mouse(self.current_radius,
                             starting_angle_radians=self.current_angle)
-
+        
     def shrink_radius(self, decrement=10):
         """Decrease the radius for mouse movement."""
-        print(f"Current radius before decrement: {self.current_radius}")
         self.current_radius -= decrement
         if self.current_radius < self.default_radius:
             self.current_radius = self.default_radius
 
         self.rotate_mouse(self.current_radius,
                     starting_angle_radians=self.current_angle)
+
+    def set_radius_max(self):
+        """Set the radius to the maximum value."""
+        self.current_radius = self.max_radius
+        self.rotate_mouse(self.current_radius, 
+                          starting_angle_radians=self.current_angle)
+        
+    def set_radius_min(self):
+        """Reset the radius to the default value."""
+        self.current_radius = self.default_radius
+        self.rotate_mouse(self.current_radius, 
+                          starting_angle_radians=self.current_angle)
 
     def move_mouse(self, x, y):
         def move_mouse_thread():
