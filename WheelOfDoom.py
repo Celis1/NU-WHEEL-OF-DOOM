@@ -29,9 +29,8 @@ if __name__ == "__main__":
     temp.daemon = True  # This line makes it exit when main program exits
     temp.start()
 
-    # TODO : only updates or changes to inputs should added to a queue to read
-    # TODO : AND OUR READ FUNCTION WILL READ THE QUEUE INSTEAD OF THE DEVICE DIRECTLY
-
+    # TODO : ADD ANTI GHOSTING
+    # TODO : ADD N ROLLOVER
     print("Starting Wheel of Doom controller...")
     try:
         while True:
