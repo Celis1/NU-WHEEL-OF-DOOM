@@ -12,32 +12,13 @@ import threading
 from mouse_inputs import GameScreenMouse
 
 
-class AdvancedControlFunc:
-    pass
-
-
-class Controller(GameScreenMouse):
+class ButtonHandler(GameScreenMouse):
     def __init__(self):
-        super().__init__()
-        self.current_event = {'ABS_X': 0,
-                              'ABS_HAT0Y': 0,
-                              'ABS_RY': 0,
-                              'ABS_Z': 0,
-                              'ABS_HAT0X': 0,
-                              'ABS_RZ': 0,
-                              'BTN_TR': 0,
-                              'BTN_SOUTH': 0,
-                              'BTN_START': 0,
-                              'BTN_SELECT': 0,
-                              'BTN_NORTH': 0,
-                              'BTN_WEST': 0,
-                              'BTN_TL': 0,
-                              'BTN_EAST': 0,
-                              'BTN_THUMBR': 0,
-                              'BTN_THUMBL': 0,
-                            }
-        
-        # self.previous_event = self.current_event.copy()
+        self.button_combos = self._set_button_combos()
+
+        self.single_button_combos = self._set_single_button_combos()
+
+        self.btns = [] # fill this with all single buttons 
 
     def flame_macro(self):
         def flame_macro_thread():
@@ -67,14 +48,6 @@ class Controller(GameScreenMouse):
         # Play non-blocking
         sd.play(data, fs)
 
-    def read(self):
-        events = get_gamepad()
-        for event in events:
-            # if event.ev_type == 'Absolute' or event.ev_type == 'Key':
-            self.current_event[event.code] = event.state
-
-        return self.current_event
-    
     def button_press(self, button, key_down=False):
         def button_press_thread():
             """Press the button."""
@@ -91,6 +64,144 @@ class Controller(GameScreenMouse):
         
         threading.Thread(target=multi_button_press_thread).start()
 
+
+    def _set_button_combos(self):
+        combos = {
+
+        }
+        return combos
+
+    def _set_single_button_combos(self):
+        combos = {
+
+        }
+        return combos
+
+
+class Controller(ButtonHandler):
+    def __init__(self):
+        super().__init__()
+        self.current_event = {'ABS_X': 0,
+                              'ABS_HAT0Y': 0,
+                              'ABS_RY': 0,
+                              'ABS_Z': 0,
+                              'ABS_HAT0X': 0,
+                              'ABS_RZ': 0,
+                              'BTN_TR': 0,
+                              'BTN_SOUTH': 0,
+                              'BTN_START': 0,
+                              'BTN_SELECT': 0,
+                              'BTN_NORTH': 0,
+                              'BTN_WEST': 0,
+                              'BTN_TL': 0,
+                              'BTN_EAST': 0,
+                              'BTN_THUMBR': 0,
+                              'BTN_THUMBL': 0,
+                            }
+        
+        self.previous_event = self.current_event.copy()
+
+        # N-Key Rollover: Track all currently pressed buttons
+        self.pressed_buttons = set()
+        
+        # Anti-ghosting: Track button press/release events with timestamps
+        self.button_press_times = {}
+        self.button_release_times = {}
+        
+        # Debounce settings (in seconds)
+        self.debounce_time = 0.05  # 50ms debounce
+        
+
+        # TODO: I DONT KNOW IF WE NEED THIS
+        # Action queue for handling multiple simultaneous actions
+        self.action_queue = []
+        self.action_lock = threading.Lock()
+        
+        # Combo tracking
+        self.combo_timeout = 0.5  # 500ms combo window
+        self.active_combos = {}
+
+    def is_button_pressed(self, button):
+        """Check if a button is currently pressed."""
+        return button in self.pressed_buttons
+
+    def was_button_just_pressed(self, button):
+        """Check if a button was just pressed (edge detection)."""
+        return ((self.current_event.get(button, 0) == 1 or 
+                 self.current_event.get(button, 0) == -1) and
+                self.previous_event.get(button, 0) == 0)
+
+    def was_button_just_released(self, button):
+        """Check if a button was just released (edge detection)."""
+        return (self.current_event.get(button, 0) == 0 and 
+                (self.previous_event.get(button, 0) == 1 or
+                 self.previous_event.get(button, 0) == -1))
+
+    def is_debounced(self, button):
+        """Check if enough time has passed since last button event to avoid bouncing."""
+        current_time = time.time()
+        
+        # Check press debounce
+        if button in self.button_press_times:
+            if current_time - self.button_press_times[button] < self.debounce_time:
+                return False
+        
+        # Check release debounce
+        if button in self.button_release_times:
+            if current_time - self.button_release_times[button] < self.debounce_time:
+                return False
+        
+        return True
+    
+    def update_button_state(self, button, state):
+        """Update button state with anti-ghosting and debouncing."""
+        current_time = time.time()
+        
+        # Anti-ghosting: ignore rapid state changes
+        if not self.is_debounced(button):
+            return
+
+        if state == 1 or state == -1:  # Button pressed
+            if button not in self.pressed_buttons:
+                self.pressed_buttons.add(button)
+                self.button_press_times[button] = current_time
+                
+        elif state == 0:  # Button released
+            if button in self.pressed_buttons:
+                self.pressed_buttons.remove(button)
+                self.button_release_times[button] = current_time
+
+    def get_active_combo(self):
+        """Get the currently active button combination."""
+        # Sort pressed buttons for consistent combo detection
+        combo = tuple(sorted(self.pressed_buttons))
+        return combo if len(combo) > 1 else None
+
+
+    def execute_combo_action(self, combo):
+        """Execute action based on button combination."""
+        # TODO: MOVE COMBO ACTION MAPPINGS TO BUTTON HANDLER
+        # Define combo mappings
+        combo_actions = {
+            ('BTN_TL', 'BTN_THUMBR'): self.handle_mouse_combo,
+            ('BTN_TL', 'BTN_THUMBL'): lambda: self.click_mouse(button='left'),
+            ('BTN_TL', 'BTN_TR'): lambda: self.button_press('`'),
+            ('BTN_TL', 'BTN_NORTH'): lambda: self.button_press('d'),
+            ('BTN_TL', 'BTN_EAST'): lambda: self.button_press('f'),
+        }
+        
+        if combo in combo_actions:
+            combo_actions[combo]()
+            return True
+        return False
+
+    def read(self):
+        events = get_gamepad()
+        for event in events:
+            # if event.ev_type == 'Absolute' or event.ev_type == 'Key':
+            self.current_event[event.code] = event.state
+
+        return self.current_event
 
     def get_action(self):
 
