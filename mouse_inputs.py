@@ -105,6 +105,7 @@ class GameScreenMouse:
         self.move_mouse(items_cord_x, items_cord_y)
 
 
+    # TODO: MAKE BUCKETS FOR MOUSE INCRAMENTS
     def grow_radius(self, increment=10):
         """Increase the radius for mouse movement."""
         self.current_radius += increment
@@ -115,7 +116,7 @@ class GameScreenMouse:
 
         self.rotate_mouse(self.current_radius,
                             starting_angle_radians=self.current_angle)
-        
+         
     def shrink_radius(self, decrement=10):
         """Decrease the radius for mouse movement."""
         self.current_radius -= decrement
@@ -171,7 +172,7 @@ class GameScreenMouse:
 
     def abs_x_to_relative_radians(self, abs_x_value,
                                   dead_zone=400,
-                                  max_angle_degrees=180):
+                                  max_angle_degrees=270):
         """
         Convert ABS_X input directly to relative radians using normalized input
         
