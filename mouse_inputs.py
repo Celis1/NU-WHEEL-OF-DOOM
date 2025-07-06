@@ -171,7 +171,7 @@ class GameScreenMouse:
 
     def abs_x_to_relative_radians(self, abs_x_value,
                                   dead_zone=400,
-                                  max_angle_degrees=180):
+                                  max_angle_degrees=270):
         """
         Convert ABS_X input directly to relative radians using normalized input
         
