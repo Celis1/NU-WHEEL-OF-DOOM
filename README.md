@@ -49,22 +49,25 @@ PADDLE R : BTN_TR
 BACK L : BTN_THUMBL
 BACK R : BTN_THUMBR
 
+PEDAL BREAK : ABS_Z
+PEDAL GAS : ABS_RZ
+
 ## - Button mappings to my steering wheel 
     - (1) PADDLE R = right click -1-
-    - (2) PADDLE L + BACK L = left click -2-
-    - (3) PADDLE L + Paddle R = ` attack move -2-
+    - (2) PADDLE L + BACK L = left click -2- -0-
+    - (3) PADDLE L + Paddle R = ` attack move -2- -0-
 
     - (4) B BUTTON: BTN_WEST = q ability -1-
     - (5) X BUTTON: BTN_NORTH = w ability -1-
     - (6) A BUTTON: BTN_EAST = e ability -1-
     - (7) Y BUTTON: BTN_SOUTH = r ultimate ability -1-
-    - (8) PADDLE L + X BUTTON = d flash ability -2-
-    - (9) PADDLE L + A BUTTON = f smite ability -2-
+    - (8) PADDLE L + X BUTTON = d flash ability -2- -0-
+    - (9) PADDLE L + A BUTTON = f smite ability -2- -0-
 
-    - (10) BACK L + B BUTTON: BTN_SOUTH = lvl q ability -2-
-    - (11) BACK L + X BUTTON: BTN_NORTH = lvl w ability -2-
-    - (12) BACK L + A BUTTON: BTN_EAST = lvl e ability -2-
-    - (13) BACK L + Y BUTTON: BTN_WEST = lvl r ability -2-
+    - (10) BACK L + B BUTTON: BTN_SOUTH = lvl q ability -2- -0-
+    - (11) BACK L + X BUTTON: BTN_NORTH = lvl w ability -2- -0-
+    - (12) BACK L + A BUTTON: BTN_EAST = lvl e ability -2- -0-
+    - (13) BACK L + Y BUTTON: BTN_WEST = lvl r ability -2- -0-
 
     - (14) BACK R + D-PAD RIGHT: ABS_HAT0X 1 = item 2 -2-
     - (15) BACK R + D-PAD DOWN: ABS_HAT0Y 1 = item 3 -2-

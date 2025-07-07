@@ -102,8 +102,7 @@ class Controller(GameScreenMouse):
                 self.button_release_times[button] = current_time
 
 
-
-    # TODO: THIS IS REDUNDANT NOT SURE WHY THEY ARE CONVERTING TO TUPLES
+    # this is to make sure the tuple is always the same order
     def get_active_combo(self):
         """Get the currently active button combination."""
         # Sort pressed buttons for consistent combo detection
@@ -130,7 +129,7 @@ class Controller(GameScreenMouse):
 
 
 
-    # TODO: NEED TO UNDERSTAND THIS A LITTLE BETTER
+    # TODO: OUR READ FUNCTION IS GONNA BE A COMBINATION OF THIS STUFF
     # TAKE THIS WITH A GRAIN OF SALT
     def add_action_to_queue(self, action):
         """Add an action to the queue for execution."""
@@ -146,8 +145,6 @@ class Controller(GameScreenMouse):
                     action()
                 except Exception as e:
                     print(f"Error executing action: {e}")
-
-
 
 
     def read(self):

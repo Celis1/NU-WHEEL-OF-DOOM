@@ -1,14 +1,12 @@
-
-
 from inputs import get_gamepad
 import pyautogui
 import pydirectinput
 import time
+import math
 import sounddevice as sd
 import soundfile as sf
 import threading
 from queue import Queue
-
 
 from mouse_inputs import GameScreenMouse
 
@@ -21,7 +19,6 @@ class ButtonHandler(GameScreenMouse):
         '''
         self.button_combos = self._set_button_combos()
         self.single_button_combos = self._set_single_button_combos()
-        
 
     def flame_macro(self):
         def flame_macro_thread():
@@ -41,7 +38,7 @@ class ButtonHandler(GameScreenMouse):
             time.sleep(0.2)
             pydirectinput.press('enter')
 
-        threading.Thread(target=flame_macro_thread).start()
+        threading.Thread(target=flame_macro_thread, daemon=True).start()
 
     def play_horn_sound(self):
         """Play a horn sound when the ping button is pressed."""
@@ -56,7 +53,7 @@ class ButtonHandler(GameScreenMouse):
             """Press the button."""
             pydirectinput.press(button)
 
-        threading.Thread(target=button_press_thread).start()
+        threading.Thread(target=button_press_thread, daemon=True).start()
 
     def multi_button_press(self, button):
         def multi_button_press_thread():
@@ -65,7 +62,7 @@ class ButtonHandler(GameScreenMouse):
             pydirectinput.press(button)
             pydirectinput.keyUp('ctrl')
         
-        threading.Thread(target=multi_button_press_thread).start()
+        threading.Thread(target=multi_button_press_thread, daemon=True).start()
 
     # making all button mappings
     def _set_button_combos(self):
@@ -88,20 +85,17 @@ class ButtonHandler(GameScreenMouse):
             # TODO: need a way to register difference between ABS_HAT0X -1 and 1
             # ('BTN_THUMBR', 'ABS_HAT0X'): lambda: self.button_press('2'),
             # ('BTN_THUMBR', 'ABS_HAT0Y'): lambda: self.button_press('3'),
-
-
         }
         return combos
 
     def _set_single_button_combos(self):
         combos = {
-            ('BTN_TR'): lambda: self.click_mouse(button='right'),
+            'BTN_TR': lambda: self.click_mouse(button='right'),
             
-            ('BTN_WEST'): lambda: self.button_press('q'),
-            ('BTN_NORTH'): lambda: self.button_press('w'),
-            ('BTN_EAST'): lambda: self.button_press('e'),
-            ('BTN_SOUTH'): lambda: self.button_press('r'),
-
+            'BTN_WEST': lambda: self.button_press('q'),
+            'BTN_NORTH': lambda: self.button_press('w'),
+            'BTN_EAST': lambda: self.button_press('e'),
+            'BTN_SOUTH': lambda: self.button_press('r'),
         }
         return combos
 
@@ -139,28 +133,35 @@ class Controller(ButtonHandler):
         # Debounce settings (in seconds)
         self.debounce_time = 0.05  # 50ms debounce
         
-        # queue of actions
-        self.action_queue = []
-        
         # Combo tracking
         self.combo_timeout = 0.5  # 500ms combo window
         self.active_combos = {}
+        
+        # Thread safety
+        self.lock = threading.Lock()
+        
+        # Track executed combos to prevent spam
+        self.executed_combos = set()
+        self.last_combo_time = {}
 
     def is_button_pressed(self, button):
         """Check if a button is currently pressed."""
-        return button in self.pressed_buttons
+        with self.lock:
+            return button in self.pressed_buttons
 
     def was_button_just_pressed(self, button):
         """Check if a button was just pressed (edge detection)."""
-        return ((self.current_event.get(button, 0) == 1 or 
-                 self.current_event.get(button, 0) == -1) and
-                self.previous_event.get(button, 0) == 0)
+        with self.lock:
+            return ((self.current_event.get(button, 0) == 1 or 
+                     self.current_event.get(button, 0) == -1) and
+                    self.previous_event.get(button, 0) == 0)
 
     def was_button_just_released(self, button):
         """Check if a button was just released (edge detection)."""
-        return (self.current_event.get(button, 0) == 0 and 
-                (self.previous_event.get(button, 0) == 1 or
-                 self.previous_event.get(button, 0) == -1))
+        with self.lock:
+            return (self.current_event.get(button, 0) == 0 and 
+                    (self.previous_event.get(button, 0) == 1 or
+                     self.previous_event.get(button, 0) == -1))
 
     def is_debounced(self, button):
         """Check if enough time has passed since last button event to avoid bouncing."""
@@ -186,7 +187,7 @@ class Controller(ButtonHandler):
         if not self.is_debounced(button):
             return
 
-        # TODO : ABS_HAT0X AND ABS_HAT0Y BOTH HAVE -1 VALUES WE CANT ADD THE SAME NAME TO THE SET
+        # Handle different button states
         if state == 1 or state == -1:  # Button pressed
             if button not in self.pressed_buttons:
                 self.pressed_buttons.add(button)
@@ -196,83 +197,136 @@ class Controller(ButtonHandler):
             if button in self.pressed_buttons:
                 self.pressed_buttons.remove(button)
                 self.button_release_times[button] = current_time
-
-        
+                
+                # Clear executed combo when buttons are released
+                current_combo = tuple(sorted(self.pressed_buttons))
+                if current_combo in self.executed_combos:
+                    self.executed_combos.remove(current_combo)
 
     def get_active_combo(self):
         """Get the currently active button combination."""
-        # Sort pressed buttons for consistent combo detection
-        combo = tuple(sorted(self.pressed_buttons))
-        
-        # TODO: WE MIGHT JUST RETURN THE COMBO WITH SINGLE BUTTONS
-        return combo if len(combo) > 1 else None
+        with self.lock:
+            # Sort pressed buttons for consistent combo detection
+            combo = tuple(sorted(self.pressed_buttons))
+            return combo if len(combo) > 1 else None
 
+    def get_single_pressed_button(self):
+        """Get single pressed button if only one is pressed."""
+        with self.lock:
+            if len(self.pressed_buttons) == 1:
+                return next(iter(self.pressed_buttons))
+            return None
 
     def execute_combo_action(self, combo):
         """Execute action based on button combination."""
+        current_time = time.time()
         
+        # Prevent spam - only execute once per combo press
+        if combo in self.executed_combos:
+            return False
+            
+        # Check if combo exists
         if combo in self.button_combos:
             self.button_combos[combo]()
+            self.executed_combos.add(combo)
+            self.last_combo_time[combo] = current_time
             return True
         return False
-    
-    def handle_single_button_press(self, button):
-        """Handle individual button press events."""
-        
+
+    def execute_single_action(self, button):
+        """Execute single button action."""
         if button in self.single_button_combos:
-            # Queue the action to prevent blocking
-            self.add_action_to_queue(self.single_button_combos[button])
+            self.single_button_combos[button]()
+            return True
+        return False
 
     def read(self):
-        events = get_gamepad()
+        """Read controller input - designed to be called from separate thread."""
+        try:
+            events = get_gamepad()
+            
+            with self.lock:
+                # Store previous state for edge detection
+                self.previous_event = self.current_event.copy()
 
-        # Store previous state for edge detection
-        self.previous_event = self.current_event.copy()
+                for event in events:
+                    # Update current event state
+                    self.current_event[event.code] = event.state
+                      
+                    # Update button state tracking for digital buttons
+                    if event.ev_type == 'Key':
+                        self.update_button_state(event.code, event.state)
 
-        for event in events:
-            # if event.ev_type == 'Absolute' or event.ev_type == 'Key':
-            self.current_event[event.code] = event.state
-              
-            # Update button state tracking for digital buttons
-            if event.ev_type == 'Key':
-                self.update_button_state(event.code, event.state)
-
-        return self.current_event
-    
+            return self.current_event
+        except Exception as e:
+            print(f"Controller read error: {e}")
+            return self.current_event
 
     def get_action(self):
-        # Process queued actions first 
-        action = self.action_queue.pop(0)
-        action()
-        
-        # Check for active combos (N-key rollover)
-        active_combo = self.get_active_combo()
-        if active_combo:
-            if self.execute_combo_action(active_combo):
-                return
-        
-        # Handle individual button presses (with edge detection to prevent spam)
-        for button in ['BTN_TL', 'BTN_TR', 'BTN_NORTH', 'BTN_EAST', 'BTN_SOUTH', 
-                       'BTN_WEST', 'BTN_THUMBL', 'BTN_THUMBR', 'BTN_START', 'BTN_SELECT']:
-            if self.was_button_just_pressed(button):
-                self.handle_single_button_press(button)
-        
+        """Check for and execute controller actions - called from main loop."""
+        with self.lock:
+            # Check for active combos first (higher priority)
+            active_combo = self.get_active_combo()
+            if active_combo:
+                if self.execute_combo_action(active_combo):
+                    return
+            
+            # Check for single button actions (only if no combo active)
+            if not active_combo:
+                # Check for button press events
+                for button in self.current_event:
+                    if self.was_button_just_pressed(button):
+                        if self.execute_single_action(button):
+                            break  # Only execute one action per frame
 
-    # DEBUGGING METHOD
-    def get_pressed_buttons_info(self):
-        """Debug method to see currently pressed buttons."""
-        return {
-            'pressed_buttons': list(self.pressed_buttons),
-            'active_combo': self.get_active_combo(),
-            'queue_length': len(self.action_queue)
-        }
+    def get_current_state(self):
+        """Get current controller state (thread-safe)."""
+        with self.lock:
+            return self.current_event.copy()
+
+    def get_pressed_buttons(self):
+        """Get currently pressed buttons (thread-safe)."""
+        with self.lock:
+            return self.pressed_buttons.copy()
+
+    def get_changes(self):
+        """Get only the values that changed between current and previous state."""
+        with self.lock:
+            changes = {key: self.current_event[key] 
+                      for key in self.current_event 
+                      if self.current_event[key] != self.previous_event[key]}
+            return changes
+
 
 if __name__ == "__main__":
     controller = Controller()
     
-    while 1:
-        events = controller.read()
-        # if controller.current_event['BTN_NORTH'] == 1:
-        #     controller._center_mouse()
-        #     print("Centering mouse...")
-        print(controller.get_pressed_buttons_info())
+    def read_controller_thread(controller):
+        while True:
+            controller.read()
+            time.sleep(0.001)  # Small sleep to prevent excessive CPU usage
+    
+    # Start the controller reading thread
+    temp = threading.Thread(target=read_controller_thread, args=(controller,))
+    temp.daemon = True
+    temp.start()
+    
+    try:
+        while True:
+            # Get actions from controller
+            controller.get_action()
+            
+            # Example usage
+            if controller.current_event['BTN_NORTH'] == 1:
+                controller._center_mouse()
+                print("Centering mouse...")
+            
+            # Show only changes to reduce spam
+            changes = controller.get_changes()
+            if changes:
+                print(f"Changes: {changes}")
+            
+            time.sleep(0.1)
+            
+    except KeyboardInterrupt:
+        print("\nShutting down...")
