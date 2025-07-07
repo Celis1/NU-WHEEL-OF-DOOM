@@ -137,13 +137,13 @@ class Controller(ButtonHandler):
         self.button_release_times = {}
         
         # Debounce settings (in seconds)
-        self.debounce_time = 0.05  # 50ms debounce
+        self.debounce_time = 0.005  #debounce
         
         # queue of actions
         self.action_queue = []
         
         # Combo tracking
-        self.combo_timeout = 0.5  # 500ms combo window
+        self.combo_timeout = 0.05  #combo window
         self.active_combos = {}
 
     def is_button_pressed(self, button):
@@ -184,6 +184,7 @@ class Controller(ButtonHandler):
         
         # Anti-ghosting: ignore rapid state changes
         if not self.is_debounced(button):
+            print(f"Button {button} state change ignored due to debounce.")
             return
 
         # TODO : ABS_HAT0X AND ABS_HAT0Y BOTH HAVE -1 VALUES WE CANT ADD THE SAME NAME TO THE SET
@@ -221,7 +222,7 @@ class Controller(ButtonHandler):
         
         if button in self.single_button_combos:
             # Queue the action to prevent blocking
-            self.add_action_to_queue(self.single_button_combos[button])
+            self.action_queue.append(self.single_button_combos[button])
 
     def read(self):
         events = get_gamepad()
@@ -242,8 +243,9 @@ class Controller(ButtonHandler):
 
     def get_action(self):
         # Process queued actions first 
-        action = self.action_queue.pop(0)
-        action()
+        if self.action_queue:
+            action = self.action_queue.pop(0)
+            action()
         
         # Check for active combos (N-key rollover)
         active_combo = self.get_active_combo()
