@@ -68,10 +68,12 @@
         
 
 ## - Button mappings to my steering wheel 
+    # CLICKS
     - (1) PADDLE R = right click -1- -0-
     - (2) PADDLE L + BACK L = left click -2- -0-
     - (3) PADDLE L + Paddle R = ` attack move -2- -0-
 
+    # CORE ABILITES
     - (4) B BUTTON: BTN_WEST = q ability -1-
     - (5) X BUTTON: BTN_NORTH = w ability -1-
     - (6) A BUTTON: BTN_EAST = e ability -1-
@@ -79,32 +81,36 @@
     - (8) PADDLE L + X BUTTON = d flash ability -2- -0-
     - (9) PADDLE L + A BUTTON = f smite ability -2- -0-
 
+    # LVL ABILITY
     - (10) BACK L + B BUTTON: BTN_SOUTH = lvl q ability -2- -0-
     - (11) BACK L + X BUTTON: BTN_NORTH = lvl w ability -2- -0-
     - (12) BACK L + A BUTTON: BTN_EAST = lvl e ability -2- -0-
     - (13) BACK L + Y BUTTON: BTN_WEST = lvl r ability -2- -0-
 
+    # ITEMS
     - (14) PADDLE L + D-PAD RIGHT: ABS_HAT0X 1 = item 2 -2-
     - (15) BACK R + D-PAD DOWN: ABS_HAT0Y 1 = item 3 -2-
     - (16) BACK R + D-PAD LEFT: ABS_HAT0X -1 = item 4 ward -2-
     - (17) BACK R + D-PAD UP: ABS_HAT0Y -1 = s stop moving -2-
-    
+
+    # MOVEMENT
     - (18) BACK L + D-PAD RIGHT: ABS_HAT0X 1 = ` attack champion only -!-(REMOVE THIS ITS OUR PADDLE L + PADDLE R) -2-
 
+    # PING
     - (19) OPTION BUTTON: BTN_SELECT = u ping on my way + horn -1-
     - (20) PADDLE L + D-PAD(ANY DIRECTION) + OPTION BUTTON: BTN_SELECT = ping retreat -3-
 
+    # MISC ACTIONS
     - (21) BACK L + D-PAD UP: ABS_HAT0Y -1 = tab leaderboard -2-
     - (22) BACK L + D-PAD LEFT: ABS_HAT0X -1 = p shop -2-
     - (23) BACK L + D-PAD DOWN: ABS_HAT0Y 1 = b recall -2-
 
 
-    
-    [REVISE THIS WE WANT COMBO DPAD BUTTON TO FREE UP PADDLE L WITH DPAD]
-    - (24) PADDLE L + D-PAD UP: ABS_HAT0Y -1 = f2 view ally 1 -2-
-    - (25) PADDLE L + D-PAD RIGHT: ABS_HAT0X 1 = f3 view ally 2 -2-
-    - (26) PADDLE L + D-PAD DOWN: ABS_HAT0Y 1 = f4 view ally 3 -2-
-    - (27) PADDLE L + D-PAD LEFT: ABS_HAT0X -1 = f5 view ally 4 -2-
+    # VIEW ALLY
+    - (24) BACK L + D-PAD UP: ABS_HAT0Y -1 = f2 view ally 1 -2-
+    - (25) BACK L + D-PAD RIGHT: ABS_HAT0X 1 = f3 view ally 2 -2-
+    - (26) BACK L + D-PAD DOWN: ABS_HAT0Y 1 = f4 view ally 3 -2-
+    - (27) BACK L + D-PAD LEFT: ABS_HAT0X -1 = f5 view ally 4 -2-
 
 
     (OPTIONALS)
