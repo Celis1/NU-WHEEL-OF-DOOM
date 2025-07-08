@@ -52,34 +52,6 @@ class Controller(GameScreenMouse):
         self.combo_timeout = 0.5  # 500ms combo window
         self.active_combos = {}
 
-    def flame_macro(self):
-        def flame_macro_thread():
-            """Simulate a series of key presses for the all chat flame macro."""
-            basic_text = 'your ass is grass and imma mow it'
-
-            # Press Shift + Enter using pydirectinput
-            pydirectinput.keyDown('shift')
-            pydirectinput.press('enter')
-            pydirectinput.keyUp('shift')
-            
-            time.sleep(0.1)
-            
-            # Type the text
-            pyautogui.write(basic_text)
-            
-            time.sleep(0.2)
-            pydirectinput.press('enter')
-
-        threading.Thread(target=flame_macro_thread).start()
-
-    def play_horn_sound(self):
-        """Play a horn sound when the ping button is pressed."""
-        # Load audio file
-        data, fs = sf.read('./Audio/test_horn.mp3')
-
-        # Play non-blocking
-        sd.play(data, fs)
-
     def is_button_pressed(self, button):
         """Check if a button is currently pressed."""
         return button in self.pressed_buttons
@@ -110,6 +82,7 @@ class Controller(GameScreenMouse):
         
         return True
 
+
     def update_button_state(self, button, state):
         """Update button state with anti-ghosting and debouncing."""
         current_time = time.time()
@@ -117,8 +90,8 @@ class Controller(GameScreenMouse):
         # Anti-ghosting: ignore rapid state changes
         if not self.is_debounced(button):
             return
-        
-        if state == 1:  # Button pressed
+
+        if state == 1 or state == -1:  # Button pressed
             if button not in self.pressed_buttons:
                 self.pressed_buttons.add(button)
                 self.button_press_times[button] = current_time
@@ -128,12 +101,16 @@ class Controller(GameScreenMouse):
                 self.pressed_buttons.remove(button)
                 self.button_release_times[button] = current_time
 
+
+    # this is to make sure the tuple is always the same order
     def get_active_combo(self):
         """Get the currently active button combination."""
         # Sort pressed buttons for consistent combo detection
         combo = tuple(sorted(self.pressed_buttons))
         return combo if len(combo) > 1 else None
 
+
+    # TODO: CONVERT OUR MY_CONTROLLER get_action FUNCTION TO SOMETHING LIKE THIS
     def execute_combo_action(self, combo):
         """Execute action based on button combination."""
         # Define combo mappings
@@ -150,18 +127,10 @@ class Controller(GameScreenMouse):
             return True
         return False
 
-    def handle_mouse_combo(self):
-        """Handle mouse movement combos with directional input."""
-        # Check for directional input while mouse combo is active
-        if self.current_event.get('ABS_HAT0Y') == -1:
-            self.absolute_mouse_move()
-        elif self.current_event.get('ABS_HAT0Y') == 1:
-            self.absolute_mouse_move()
-        elif self.current_event.get('ABS_HAT0X') == 1:
-            self.absolute_mouse_move()
-        elif self.current_event.get('ABS_HAT0X') == -1:
-            self.absolute_mouse_move()
 
+
+    # TODO: OUR READ FUNCTION IS GONNA BE A COMBINATION OF THIS STUFF
+    # TAKE THIS WITH A GRAIN OF SALT
     def add_action_to_queue(self, action):
         """Add an action to the queue for execution."""
         with self.action_lock:
@@ -176,6 +145,7 @@ class Controller(GameScreenMouse):
                     action()
                 except Exception as e:
                     print(f"Error executing action: {e}")
+
 
     def read(self):
         """Read gamepad events with enhanced state tracking."""
@@ -194,21 +164,6 @@ class Controller(GameScreenMouse):
 
         return self.current_event
     
-    def button_press(self, button, key_down=False):
-        def button_press_thread():
-            """Press the button."""
-            pydirectinput.press(button)
-
-        threading.Thread(target=button_press_thread).start()
-
-    def multi_button_press(self, button):
-        def multi_button_press_thread():
-            """Press multiple buttons in sequence."""
-            pydirectinput.keyDown('ctrl')
-            pydirectinput.press(button)
-            pydirectinput.keyUp('ctrl')
-        
-        threading.Thread(target=multi_button_press_thread).start()
 
     def get_action(self):
         """Enhanced action processing with N-key rollover and anti-ghosting."""
@@ -242,6 +197,7 @@ class Controller(GameScreenMouse):
             # Queue the action to prevent blocking
             self.add_action_to_queue(single_button_actions[button])
 
+    # DONT DO THIS: WE WILL CALL SOMETHING SIMILAR WHEN THE LEAGUE GAME ENDS
     def cleanup_old_states(self):
         """Clean up old button state data to prevent memory leaks."""
         current_time = time.time()
@@ -259,6 +215,8 @@ class Controller(GameScreenMouse):
         for key in old_release_keys:
             del self.button_release_times[key]
 
+
+    # DEBUGGING METHOD
     def get_pressed_buttons_info(self):
         """Debug method to see currently pressed buttons."""
         return {

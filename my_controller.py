@@ -11,6 +11,11 @@ import threading
 
 from mouse_inputs import GameScreenMouse
 
+
+class AdvancedControlFunc:
+    pass
+
+
 class Controller(GameScreenMouse):
     def __init__(self):
         super().__init__()
