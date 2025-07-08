@@ -17,6 +17,22 @@ def read_controller_thread(controller):
     while True:
         controller.read()
 
+def read_contious_vals(controller):
+    # fps = 600 # keep at 120
+    # frame_time = 1.0 / fps  
+    # last_frame_time = time.time()
+
+    while True:
+        current_time = time.time()  # You're missing this line!
+        
+        # cap the frame rate
+        # if current_time - last_frame_time >= frame_time:
+        controller.rotate_mouse(controller.buttons['ABS_X'])
+        controller.update_pedals()
+            
+            # last_frame_time = current_time  # Only update AFTER frame executes
+
+
 if __name__ == "__main__":
     # fps = 120 # keep at 120
     # frame_time = 1.0 / fps  
@@ -27,7 +43,7 @@ if __name__ == "__main__":
     controller = Controller()
 
     # Make it a daemon thread - it will die when main program exits
-    temp = threading.Thread(target=read_controller_thread, args=(controller,))
+    temp = threading.Thread(target=read_contious_vals, args=(controller,))
     temp.daemon = True  # This line makes it exit when main program exits
     temp.start()
 
@@ -41,8 +57,8 @@ if __name__ == "__main__":
 
             # cap the frame rate
             # if current_time - last_frame_time >= frame_time:
-            controller.rotate_mouse(controller.buttons['ABS_X'])
-            controller.update_pedals()
+            # controller.rotate_mouse(controller.buttons['ABS_X'])
+            # controller.update_pedals()
 
             # print('calling action')
             print()

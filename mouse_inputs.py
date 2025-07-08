@@ -17,6 +17,12 @@ class GameScreenMouse:
         self.default_radius = 90
         self.current_radius = self.default_radius
         self.max_radius = 450
+        self.radius_modifier = .003
+
+        self.lock_mouse = True
+        self.unlock_count = 0
+        self.curr_unlock_value = 10000
+
         self.current_angle = math.pi/2
         self.default_angle = math.pi/2
 
@@ -27,7 +33,7 @@ class GameScreenMouse:
         self.offset_y = -60
         self.curr_side = 'blue'
         self.offset_blue = [-90, -60]
-        self.offset_red = [90, -00]
+        self.offset_red = [70, -200]
 
         # champion center position
         self.center_x = (self.max_screen_width // 2) + self.offset_x
@@ -71,6 +77,15 @@ class GameScreenMouse:
         return x, y
     
     def rotate_mouse(self, abs_x_value, starting_angle_radians=None):
+
+        # if self.lock_mouse:
+        #     if abs_x_value != 0:
+        #         self.unlock_count = 0
+        #         self.lock_mouse = True
+        #     else:
+        #         return
+            
+
         radian_val = self.abs_x_to_relative_radians(int(abs_x_value))
         
         X_POS, Y_POS = self.radians_to_mouse_position(radian_val,
@@ -81,6 +96,17 @@ class GameScreenMouse:
                                                       
         self.move_mouse(X_POS, Y_POS)
         # print(f"Mouse moved to: ({X_POS}, {Y_POS}) with radians: {radian_val}")
+
+        # if abs_x_value == 0:
+        #     print('ABS_X IS ZERO::', self.unlock_count)
+        #     if self.unlock_count >= self.curr_unlock_value:
+        #         self.lock_mouse = False 
+        #         return
+        
+        #     self.unlock_count += 1
+
+
+
 
     def quarter_step_mouse(self, cardinal_direction='N'):
         """Move the mouse in a quarter step based on cardinal direction."""
@@ -108,7 +134,9 @@ class GameScreenMouse:
     # TODO: MAKE BUCKETS FOR MOUSE INCRAMENTS
     def grow_radius(self, input_val):
         """Increase the radius for mouse movement."""
-        incrament = input_val // 30
+        incrament = abs(input_val) * self.radius_modifier
+
+        self.current_radius = self.current_radius + incrament
 
         self.current_radius += incrament
         if self.current_radius > self.max_radius:
@@ -121,9 +149,10 @@ class GameScreenMouse:
          
     def shrink_radius(self, input_val):
         """Decrease the radius for mouse movement."""
-        decrament = input_val // 30
+        decrament = abs(input_val) * self.radius_modifier
 
-        self.current_radius -= decrament
+        self.current_radius = abs(self.current_radius) - decrament
+
         if self.current_radius < self.default_radius:
             self.current_radius = self.default_radius
 
@@ -198,7 +227,7 @@ class GameScreenMouse:
 
     def abs_x_to_relative_radians(self, abs_x_value,
                                   dead_zone=400,
-                                  max_angle_degrees=270):
+                                  max_angle_degrees=180):
         """
         Convert ABS_X input directly to relative radians using normalized input
         

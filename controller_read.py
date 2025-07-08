@@ -16,6 +16,9 @@ class Abilitys(GameScreenMouse):
 
     def __init__(self):
         # ALPHATIVE ORDER OF BTN PRESS
+        self.ignore_brake = 0
+        self.ignore_gas = 0
+        self.ignore_count = 100
 
         self.abilties = {
             # Clicks
@@ -55,13 +58,18 @@ class Abilitys(GameScreenMouse):
 
             # view ally!
             # TODO: ADD ALLY VIEW MACRO
+            ('ABS_HAT0Y_UP', 'BTN_THUMBL'): lambda: self.button_press('f2'),
+            ('ABS_HAT0X_RIGHT', 'BTN_THUMBL'): lambda: self.button_press('f3'),
+            ('ABS_HAT0Y_DOWN', 'BTN_THUMBL'): lambda: self.button_press('f4'),
+            ('ABS_HAT0X_LEFT', 'BTN_THUMBL'): lambda: self.button_press('f5'),
+
 
             ('BTN_TL', 'BTN_SELECT', 'BTN_START') : lambda: self.button_press('space'),
             ('BTN_SELECT', 'BTN_START', 'BTN_THUMBL') : self.swap_offset_side,
 
             # mouse motions
             ('BTN_SELECT', 'BTN_START') : lambda: self.button_press('space'),
-            ('BTN_THUMBL', 'BTN_SELECT', 'BTN_START') : self.swap_offset_side,
+            # ('BTN_THUMBL', 'BTN_SELECT', 'BTN_START') : self.swap_offset_side,
 
             # --------- DPAD ---------
             ('ABS_HAT0Y_UP',): lambda: self.quarter_step_mouse('N'),
@@ -70,13 +78,16 @@ class Abilitys(GameScreenMouse):
             ('ABS_HAT0X_RIGHT',): lambda: self.quarter_step_mouse('E'),
 
 
-            # shop offset
+            # offset
             ('BTN_THUMBL', 'BTN_THUMBR', 'BTN_TL', 'BTN_TR'): self.shop_offset,
+            ('BTN_SELECT', 'BTN_START', 'BTN_THUMBL') : self.swap_offset_side,
             
 
     }
         
     def update_pedals(self):
+
+
         # gas pedal
         gas_val = self.buttons['ABS_RZ']
         # brake pedal
@@ -84,18 +95,38 @@ class Abilitys(GameScreenMouse):
 
 
         if gas_val != 0:
-            self.grow_radius(gas_val)
-
             # full throttle is max radius
             if self.buttons['ABS_RZ'] >= 255:
                 self.set_radius_max()
-        
+            #     self.ignore_gas = 0
 
+            # if self.ignore_gas < self.ignore_count:
+            #     self.ignore_gas += 1
+            #     return
+            
+            self.grow_radius(gas_val)
+            
+        
         if break_val != 0:
-            self.shrink_radius(break_val)
+
             # full brake is min radius
             if self.buttons['ABS_Z'] >= 255:
                 self.set_radius_attack_range()
+                self.ignore_brake = 0
+
+
+            if self.ignore_brake < self.ignore_count:
+                if self.ignore_brake < self.ignore_count:
+                    self.ignore_brake += 1
+                    return
+                
+            self.shrink_radius(break_val)
+                
+        elif break_val == 0:
+            # if the brake is released, we reset the ignore brake counter
+            self.ignore_brake = self.ignore_count
+                
+            
             
     
     # ---- converting action to on screen effect ----
