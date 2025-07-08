@@ -19,6 +19,10 @@ class GameScreenMouse:
         self.max_radius = 450
         self.radius_modifier = .003
 
+        self.unlock_mouse = True
+        self.unlock_count = 0
+        self.unlock_value = 100
+
         self.current_angle = math.pi/2
         self.default_angle = math.pi/2
 
@@ -73,6 +77,15 @@ class GameScreenMouse:
         return x, y
     
     def rotate_mouse(self, abs_x_value, starting_angle_radians=None):
+
+        if self.unlock_mouse:
+            if abs_x_value != 0:
+                self.unlock_count = 0
+                self.unlock_mouse = False
+            else:
+                return
+            
+
         radian_val = self.abs_x_to_relative_radians(int(abs_x_value))
         
         X_POS, Y_POS = self.radians_to_mouse_position(radian_val,
@@ -83,6 +96,15 @@ class GameScreenMouse:
                                                       
         self.move_mouse(X_POS, Y_POS)
         # print(f"Mouse moved to: ({X_POS}, {Y_POS}) with radians: {radian_val}")
+
+        if abs_x_value == 0:
+            self.unlock_count +=1
+
+            if self.unlock_count >= self.unlock_value:
+                self.unlock_mouse = True    
+            return
+
+
 
     def quarter_step_mouse(self, cardinal_direction='N'):
         """Move the mouse in a quarter step based on cardinal direction."""
