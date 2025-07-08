@@ -12,100 +12,6 @@ from queue import Queue
 
 from mouse_inputs import GameScreenMouse
 
-
-class ButtonHandler(GameScreenMouse):
-    def __init__(self):
-        '''
-        MAKING ABS_HAT0X -1 ABS_HAT0Y -1 -> ABS_HAT0X_LEFT AND ABS_HAT0Y_UP
-        MAKING ABS_HAT0X 1 ABS_HAT0Y 1 -> ABS_HAT0X_RIGHT AND ABS_HAT0Y_DOWN
-        '''
-        self.button_combos = self._set_button_combos()
-        self.single_button_combos = self._set_single_button_combos()
-        
-
-    def flame_macro(self):
-        def flame_macro_thread():
-            """Simulate a series of key presses for the all chat flame macro."""
-            basic_text = 'your ass is grass and imma mow it'
-
-            # Press Shift + Enter using pydirectinput
-            pydirectinput.keyDown('shift')
-            pydirectinput.press('enter')
-            pydirectinput.keyUp('shift')
-            
-            time.sleep(0.1)
-            
-            # Type the text
-            pyautogui.write(basic_text)
-            
-            time.sleep(0.2)
-            pydirectinput.press('enter')
-
-        threading.Thread(target=flame_macro_thread).start()
-
-    def play_horn_sound(self):
-        """Play a horn sound when the ping button is pressed."""
-        # Load audio file
-        data, fs = sf.read('./Audio/test_horn.mp3')
-
-        # Play non-blocking
-        sd.play(data, fs)
-
-    def button_press(self, button, key_down=False):
-        def button_press_thread():
-            """Press the button."""
-            pydirectinput.press(button)
-
-        threading.Thread(target=button_press_thread).start()
-
-    def multi_button_press(self, button):
-        def multi_button_press_thread():
-            """Press multiple buttons in sequence."""
-            pydirectinput.keyDown('ctrl')
-            pydirectinput.press(button)
-            pydirectinput.keyUp('ctrl')
-        
-        threading.Thread(target=multi_button_press_thread).start()
-
-    # making all button mappings
-    def _set_button_combos(self):
-        combos = {
-            # Triple combos
-            ('BTN_TL', 'BTN_SELECT', 'BTN_START') : lambda: self.button_press('space'),
-            ('BTN_THUMBL', 'BTN_SELECT', 'BTN_START') : self.swap_offset_side,
-
-            # Double combos
-            ('BTN_TL', 'BTN_THUMBL'): lambda: self.click_mouse(button='left'),
-            ('BTN_TL', 'BTN_TR'): lambda: self.button_press('`'),
-            ('BTN_TL', 'BTN_NORTH'): lambda: self.button_press('d'),
-            ('BTN_TL', 'BTN_EAST'): lambda: self.button_press('f'),
-
-            ('BTN_THUMBL', 'BTN_SOUTH'): lambda: self.multi_button_press('q'),
-            ('BTN_THUMBL', 'BTN_NORTH'): lambda: self.multi_button_press('w'),
-            ('BTN_THUMBL', 'BTN_EAST'): lambda: self.multi_button_press('e'),
-            ('BTN_THUMBL', 'BTN_WEST'): lambda: self.multi_button_press('r'),
-
-            # TODO: need a way to register difference between ABS_HAT0X -1 and 1
-            # ('BTN_THUMBR', 'ABS_HAT0X'): lambda: self.button_press('2'),
-            # ('BTN_THUMBR', 'ABS_HAT0Y'): lambda: self.button_press('3'),
-
-
-        }
-        return combos
-
-    def _set_single_button_combos(self):
-        combos = {
-            ('BTN_TR'): lambda: self.click_mouse(button='right'),
-            
-            ('BTN_WEST'): lambda: self.button_press('q'),
-            ('BTN_NORTH'): lambda: self.button_press('w'),
-            ('BTN_EAST'): lambda: self.button_press('e'),
-            ('BTN_SOUTH'): lambda: self.button_press('r'),
-
-        }
-        return combos
-
-
 class Controller(ButtonHandler):
     def __init__(self):
         super().__init__()
@@ -146,37 +52,37 @@ class Controller(ButtonHandler):
         self.combo_timeout = 0.05  #combo window
         self.active_combos = {}
 
-    def is_button_pressed(self, button):
-        """Check if a button is currently pressed."""
-        return button in self.pressed_buttons
+    # def is_button_pressed(self, button):
+    #     """Check if a button is currently pressed."""
+    #     return button in self.pressed_buttons
 
-    def was_button_just_pressed(self, button):
-        """Check if a button was just pressed (edge detection)."""
-        return ((self.current_event.get(button, 0) == 1 or 
-                 self.current_event.get(button, 0) == -1) and
-                self.previous_event.get(button, 0) == 0)
+    # def was_button_just_pressed(self, button):
+    #     """Check if a button was just pressed (edge detection)."""
+    #     return ((self.current_event.get(button, 0) == 1 or 
+    #              self.current_event.get(button, 0) == -1) and
+    #             self.previous_event.get(button, 0) == 0)
 
-    def was_button_just_released(self, button):
-        """Check if a button was just released (edge detection)."""
-        return (self.current_event.get(button, 0) == 0 and 
-                (self.previous_event.get(button, 0) == 1 or
-                 self.previous_event.get(button, 0) == -1))
+    # def was_button_just_released(self, button):
+    #     """Check if a button was just released (edge detection)."""
+    #     return (self.current_event.get(button, 0) == 0 and 
+    #             (self.previous_event.get(button, 0) == 1 or
+    #              self.previous_event.get(button, 0) == -1))
 
-    def is_debounced(self, button):
-        """Check if enough time has passed since last button event to avoid bouncing."""
-        current_time = time.time()
+    # def is_debounced(self, button):
+    #     """Check if enough time has passed since last button event to avoid bouncing."""
+    #     current_time = time.time()
         
-        # Check press debounce
-        if button in self.button_press_times:
-            if current_time - self.button_press_times[button] < self.debounce_time:
-                return False
+    #     # Check press debounce
+    #     if button in self.button_press_times:
+    #         if current_time - self.button_press_times[button] < self.debounce_time:
+    #             return False
         
-        # Check release debounce
-        if button in self.button_release_times:
-            if current_time - self.button_release_times[button] < self.debounce_time:
-                return False
+    #     # Check release debounce
+    #     if button in self.button_release_times:
+    #         if current_time - self.button_release_times[button] < self.debounce_time:
+    #             return False
         
-        return True
+    #     return True
     
     def update_button_state(self, button, state):
         """Update button state with anti-ghosting and debouncing."""
@@ -200,13 +106,13 @@ class Controller(ButtonHandler):
 
         
 
-    def get_active_combo(self):
-        """Get the currently active button combination."""
-        # Sort pressed buttons for consistent combo detection
-        combo = tuple(sorted(self.pressed_buttons))
+    # def get_active_combo(self):
+    #     """Get the currently active button combination."""
+    #     # Sort pressed buttons for consistent combo detection
+    #     combo = tuple(sorted(self.pressed_buttons))
         
-        # TODO: WE MIGHT JUST RETURN THE COMBO WITH SINGLE BUTTONS
-        return combo if len(combo) > 1 else None
+    #     # TODO: WE MIGHT JUST RETURN THE COMBO WITH SINGLE BUTTONS
+    #     return combo if len(combo) > 1 else None
 
 
     def execute_combo_action(self, combo):

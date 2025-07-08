@@ -44,16 +44,31 @@
     - ctrl + 6 mastery flex
     - t thumbs up emote
 
-PADDLE L : BTN_TL
-PADDLE R : BTN_TR
-BACK L : BTN_THUMBL
-BACK R : BTN_THUMBR
+## Translation
+    'BTN_TL': 'PADDLE L',
+    'BTN_TR': 'PADDLE R',
+    'BTN_THUMBL': 'BACK L',
+    'BTN_THUMBR': 'BACK R',
 
-PEDAL BREAK : ABS_Z
-PEDAL GAS : ABS_RZ
+    'BTN_WEST': 'Y BUTTON',
+    'BTN_NORTH': 'X BUTTON',
+    'BTN_EAST': 'A BUTTON',
+    'BTN_SOUTH': 'B BUTTON',
+
+    'BTN_SELECT': 'OPTION BUTTON',
+    'BTN_START': 'SHARE BUTTON',
+
+    'ABS_HAT0X': 'DPAD_LEFT_RIGHT', # -1, 0, 1
+    'ABS_HAT0Y': 'DPAD_UP_DOWN',    # -1, 0, 1
+
+    
+    'ABS_Z': 'PEDAL_GAS',  # 0 to 255
+    'ABS_RZ': 'PEDAL_BRAKE', # 0 to 255
+    'ABS_X': 'WHEEL', # -32768 to 32767
+        
 
 ## - Button mappings to my steering wheel 
-    - (1) PADDLE R = right click -1-
+    - (1) PADDLE R = right click -1- -0-
     - (2) PADDLE L + BACK L = left click -2- -0-
     - (3) PADDLE L + Paddle R = ` attack move -2- -0-
 
@@ -69,11 +84,11 @@ PEDAL GAS : ABS_RZ
     - (12) BACK L + A BUTTON: BTN_EAST = lvl e ability -2- -0-
     - (13) BACK L + Y BUTTON: BTN_WEST = lvl r ability -2- -0-
 
-    - (14) BACK R + D-PAD RIGHT: ABS_HAT0X 1 = item 2 -2-
+    - (14) PADDLE L + D-PAD RIGHT: ABS_HAT0X 1 = item 2 -2-
     - (15) BACK R + D-PAD DOWN: ABS_HAT0Y 1 = item 3 -2-
     - (16) BACK R + D-PAD LEFT: ABS_HAT0X -1 = item 4 ward -2-
-
     - (17) BACK R + D-PAD UP: ABS_HAT0Y -1 = s stop moving -2-
+    
     - (18) BACK L + D-PAD RIGHT: ABS_HAT0X 1 = ` attack champion only -!-(REMOVE THIS ITS OUR PADDLE L + PADDLE R) -2-
 
     - (19) OPTION BUTTON: BTN_SELECT = u ping on my way + horn -1-

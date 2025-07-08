@@ -24,10 +24,10 @@ class GameScreenMouse:
 
         # offsets per side
         self.offset_x = -90
-        self.offset_y = -50
+        self.offset_y = -60
         self.curr_side = 'blue'
-        self.offset_blue = [-90, -50]
-        self.offset_red = [90, -200]
+        self.offset_blue = [-90, -60]
+        self.offset_red = [90, -00]
 
         # champion center position
         self.center_x = (self.max_screen_width // 2) + self.offset_x
@@ -106,9 +106,11 @@ class GameScreenMouse:
 
 
     # TODO: MAKE BUCKETS FOR MOUSE INCRAMENTS
-    def grow_radius(self, increment=10):
+    def grow_radius(self, input_val):
         """Increase the radius for mouse movement."""
-        self.current_radius += increment
+        incrament = input_val // 30
+
+        self.current_radius += incrament
         if self.current_radius > self.max_radius:
             self.current_radius = self.max_radius
 
@@ -117,9 +119,11 @@ class GameScreenMouse:
         self.rotate_mouse(self.current_radius,
                             starting_angle_radians=self.current_angle)
          
-    def shrink_radius(self, decrement=10):
+    def shrink_radius(self, input_val):
         """Decrease the radius for mouse movement."""
-        self.current_radius -= decrement
+        decrament = input_val // 30
+
+        self.current_radius -= decrament
         if self.current_radius < self.default_radius:
             self.current_radius = self.default_radius
 
@@ -137,6 +141,28 @@ class GameScreenMouse:
         self.current_radius = self.default_radius
         self.rotate_mouse(self.current_radius, 
                           starting_angle_radians=self.current_angle)
+        
+    def set_radius_attack_range(self):
+        """Set the radius to the attack range."""
+        self.current_radius = self.default_radius + 70
+        self.rotate_mouse(self.current_radius, 
+                          starting_angle_radians=self.current_angle)
+        
+    def shop_offset(self):
+        print('-----SWAAPPING TO BUY SHOP SIDE-----')
+
+        if [self.offset_x, self.offset_y] == [0, 0]:
+            if self.curr_side == 'blue':
+                self.offset_x, self.offset_y = self.offset_blue
+            elif self.curr_side == 'red':
+                self.offset_x, self.offset_y = self.offset_red
+
+        else:
+            self.offset_x, self.offset_y = 0, 0
+        
+        self.center_x = (self.max_screen_width // 2) + self.offset_x
+        self.center_y = (self.max_screen_height // 2) + self.offset_y
+            
         
     def swap_offset_side(self):
         if self.curr_side == 'blue':
