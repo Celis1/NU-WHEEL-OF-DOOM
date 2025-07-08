@@ -18,9 +18,9 @@ def read_controller_thread(controller):
         controller.read()
 
 if __name__ == "__main__":
-    fps = 120 # keep at 120
-    frame_time = 1.0 / fps  
-    last_frame_time = time.time()
+    # fps = 120 # keep at 120
+    # frame_time = 1.0 / fps  
+    # last_frame_time = time.time()
 
 
     print("Initializing Wheel of Doom controller...")
@@ -37,21 +37,21 @@ if __name__ == "__main__":
         while True:
             current_time = time.time()
 
-            # controller.read()
+            controller.read()
 
             # cap the frame rate
-            if current_time - last_frame_time >= frame_time:
-                controller.rotate_mouse(controller.buttons['ABS_X'])
-                controller.update_pedals()
+            # if current_time - last_frame_time >= frame_time:
+            controller.rotate_mouse(controller.buttons['ABS_X'])
+            controller.update_pedals()
 
-                # print('calling action')
-                print()
-                action_went_though = controller.call_action()
-                # print(controller.current_event)
-                print(controller.get_pressed_buttons_info())
-              
+            # print('calling action')
+            print()
+            action_went_though = controller.call_action()
+            # print(controller.current_event)
+            print(controller.get_pressed_buttons_info())
+            
 
-                last_frame_time = current_time
+            last_frame_time = current_time
 
     except Exception as e:
         print(f"An error occurred: {e}")

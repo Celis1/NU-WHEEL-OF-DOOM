@@ -343,6 +343,7 @@ class Controller(ButtonBinding, Abilitys):
             if func:
                 print('FOUND AN ACTION PLEZ GOD ------------>')
                 print(f'Adding single press action: {pressed_buttons}')
+                self.btn_active.clear()
                 self.action_queue.append(func)
                 print(f'Action Queue: {len(self.action_queue)}')
 
