@@ -69,7 +69,7 @@ class Abilitys(GameScreenMouse):
 
             # mouse motions
             ('BTN_SELECT', 'BTN_START') : lambda: self.button_press('space'),
-            ('BTN_THUMBL', 'BTN_SELECT', 'BTN_START') : self.swap_offset_side,
+            # ('BTN_THUMBL', 'BTN_SELECT', 'BTN_START') : self.swap_offset_side,
 
             # --------- DPAD ---------
             ('ABS_HAT0Y_UP',): lambda: self.quarter_step_mouse('N'),
@@ -78,8 +78,9 @@ class Abilitys(GameScreenMouse):
             ('ABS_HAT0X_RIGHT',): lambda: self.quarter_step_mouse('E'),
 
 
-            # shop offset
+            # offset
             ('BTN_THUMBL', 'BTN_THUMBR', 'BTN_TL', 'BTN_TR'): self.shop_offset,
+            ('BTN_SELECT', 'BTN_START', 'BTN_THUMBL') : self.swap_offset_side,
             
 
     }

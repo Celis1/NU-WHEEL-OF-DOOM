@@ -19,9 +19,9 @@ class GameScreenMouse:
         self.max_radius = 450
         self.radius_modifier = .003
 
-        self.unlock_mouse = True
+        self.lock_mouse = True
         self.unlock_count = 0
-        self.unlock_value = 100
+        self.curr_unlock_value = 10000
 
         self.current_angle = math.pi/2
         self.default_angle = math.pi/2
@@ -33,7 +33,7 @@ class GameScreenMouse:
         self.offset_y = -60
         self.curr_side = 'blue'
         self.offset_blue = [-90, -60]
-        self.offset_red = [90, -00]
+        self.offset_red = [70, -200]
 
         # champion center position
         self.center_x = (self.max_screen_width // 2) + self.offset_x
@@ -78,12 +78,12 @@ class GameScreenMouse:
     
     def rotate_mouse(self, abs_x_value, starting_angle_radians=None):
 
-        if self.unlock_mouse:
-            if abs_x_value != 0:
-                self.unlock_count = 0
-                self.unlock_mouse = False
-            else:
-                return
+        # if self.lock_mouse:
+        #     if abs_x_value != 0:
+        #         self.unlock_count = 0
+        #         self.lock_mouse = True
+        #     else:
+        #         return
             
 
         radian_val = self.abs_x_to_relative_radians(int(abs_x_value))
@@ -97,12 +97,14 @@ class GameScreenMouse:
         self.move_mouse(X_POS, Y_POS)
         # print(f"Mouse moved to: ({X_POS}, {Y_POS}) with radians: {radian_val}")
 
-        if abs_x_value == 0:
-            self.unlock_count +=1
+        # if abs_x_value == 0:
+        #     print('ABS_X IS ZERO::', self.unlock_count)
+        #     if self.unlock_count >= self.curr_unlock_value:
+        #         self.lock_mouse = False 
+        #         return
+        
+        #     self.unlock_count += 1
 
-            if self.unlock_count >= self.unlock_value:
-                self.unlock_mouse = True    
-            return
 
 
 
