@@ -53,14 +53,9 @@ if __name__ == "__main__":
         while True:
             current_time = time.time()
 
+            # get controller input
             controller.read()
 
-            # cap the frame rate
-            # if current_time - last_frame_time >= frame_time:
-            # controller.rotate_mouse(controller.buttons['ABS_X'])
-            # controller.update_pedals()
-
-            # print('calling action')
             print()
             action_went_though = controller.call_action()
             # print(controller.current_event)
