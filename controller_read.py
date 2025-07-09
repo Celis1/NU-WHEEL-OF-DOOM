@@ -58,10 +58,10 @@ class Abilitys(GameScreenMouse):
 
             # view ally!
             # TODO: ADD ALLY VIEW MACRO
-            ('ABS_HAT0Y_UP', 'BTN_THUMBL'): lambda: self.button_press('f2'),
-            ('ABS_HAT0X_RIGHT', 'BTN_THUMBL'): lambda: self.button_press('f3'),
-            ('ABS_HAT0Y_DOWN', 'BTN_THUMBL'): lambda: self.button_press('f4'),
-            ('ABS_HAT0X_LEFT', 'BTN_THUMBL'): lambda: self.button_press('f5'),
+            ('ABS_HAT0Y_UP', 'BTN_THUMBR'): lambda: self.button_press('f2'),
+            ('ABS_HAT0X_RIGHT', 'BTN_THUMBR'): lambda: self.button_press('f3'),
+            ('ABS_HAT0Y_DOWN', 'BTN_THUMBR'): lambda: self.button_press('f4'),
+            ('ABS_HAT0X_LEFT', 'BTN_THUMBR'): lambda: self.button_press('f5'),
 
 
             ('BTN_TL', 'BTN_SELECT', 'BTN_START') : lambda: self.button_press('space'),
