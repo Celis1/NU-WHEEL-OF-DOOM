@@ -18,7 +18,7 @@ class Abilitys(GameScreenMouse):
         # ALPHATIVE ORDER OF BTN PRESS
         self.ignore_brake = 0
         self.ignore_gas = 0
-        self.ignore_count = 100
+        self.ignore_count = 60
 
         self.abilties = {
             # Clicks
@@ -81,13 +81,10 @@ class Abilitys(GameScreenMouse):
             # offset
             ('BTN_THUMBL', 'BTN_THUMBR', 'BTN_TL', 'BTN_TR'): self.shop_offset,
             ('BTN_SELECT', 'BTN_START', 'BTN_THUMBL') : self.swap_offset_side,
-            
 
     }
         
     def update_pedals(self):
-
-
         # gas pedal
         gas_val = self.buttons['ABS_RZ']
         # brake pedal
@@ -98,13 +95,9 @@ class Abilitys(GameScreenMouse):
             # full throttle is max radius
             if self.buttons['ABS_RZ'] >= 255:
                 self.set_radius_max()
-            #     self.ignore_gas = 0
 
-            # if self.ignore_gas < self.ignore_count:
-            #     self.ignore_gas += 1
-            #     return
-            
-            self.grow_radius(gas_val)
+            else:
+                self.grow_radius(gas_val)
             
         
         if break_val != 0:
@@ -115,20 +108,18 @@ class Abilitys(GameScreenMouse):
                 self.ignore_brake = 0
 
 
-            if self.ignore_brake < self.ignore_count:
+            elif self.ignore_brake < self.ignore_count:
                 if self.ignore_brake < self.ignore_count:
                     self.ignore_brake += 1
                     return
                 
-            self.shrink_radius(break_val)
+            else:
+                self.shrink_radius(break_val)
                 
         elif break_val == 0:
             # if the brake is released, we reset the ignore brake counter
             self.ignore_brake = self.ignore_count
                 
-            
-            
-    
     # ---- converting action to on screen effect ----
     def flame_macro(self):
         def flame_macro_thread():
@@ -175,8 +166,6 @@ class Abilitys(GameScreenMouse):
         threading.Thread(target=multi_button_press_thread).start()
 
 
-
-
 class ButtonBinding:
 
     def __init__(self):
@@ -190,7 +179,7 @@ class ButtonBinding:
 
         # n-key rollover anti ghosting
         self.debounce_time = 0.05  # 1ms debounce time
-        self.combo_timeout = 0.1  #combo window ms
+        self.combo_timeout = 0.1  # combo window ms
         self.curr_combo_time = 0
 
 
@@ -253,7 +242,7 @@ class ButtonBinding:
         if btn_value == 0:
             if curr_btn_name in self.btn_active:
                 self.btn_active.remove(curr_btn_name)
-                # self.curr_combo_time = 0
+                # TODO : WE CAN EVENTS HERE FOR A REMOVED ACTION 
         
         else:
             self.curr_combo_time = current_time
@@ -337,6 +326,8 @@ class Controller(ButtonBinding, Abilitys):
 
             elif event.ev_type == 'Absolute':
                 self.buttons[event.code] = event.state
+
+            dpad_btn = False
 
             
         # self.get_pressed_buttons_info()
