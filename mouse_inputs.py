@@ -6,6 +6,7 @@ import math
 import sounddevice as sd
 import soundfile as sf
 import threading
+import time
 
        
 class GameScreenMouse:
@@ -14,8 +15,10 @@ class GameScreenMouse:
         self.max_screen_width, self.max_screen_height = pyautogui.size()
 
         # radius for mouse movement
-        self.default_radius = 90
+        self.default_radius = 40
         self.current_radius = self.default_radius
+        self.attack_rang = 120  # attack range in pixels
+
         self.max_radius = 450
         self.radius_modifier = .003
 
@@ -173,7 +176,7 @@ class GameScreenMouse:
         
     def set_radius_attack_range(self):
         """Set the radius to the attack range."""
-        self.current_radius = self.default_radius + 70
+        self.current_radius = self.default_radius + self.attack_rang
         self.rotate_mouse(self.current_radius, 
                           starting_angle_radians=self.current_angle)
         
@@ -213,8 +216,8 @@ class GameScreenMouse:
         """Simulate mouse movement."""
         threading.Thread(target=move_mouse_thread).start()
     
-    def click_mouse(self, button='right'):
-        def click_mouse_thread():
+    def click_mouse(self, button='right', shift=False):
+        def click_func():
             """Click the mouse button."""
             if button == 'right':
                 pydirectinput.mouseDown(button='right')
@@ -223,7 +226,16 @@ class GameScreenMouse:
                 pydirectinput.mouseDown(button='left')
                 pydirectinput.mouseUp(button='left')
 
-        threading.Thread(target=click_mouse_thread).start()
+        def shift_click_func():
+            pydirectinput.keyDown('shift')
+            pydirectinput.mouseDown(button='right')
+            pydirectinput.keyUp('shift')
+            pydirectinput.mouseUp(button='right')
+  
+        if shift:
+            threading.Thread(target=shift_click_func).start()
+        else:
+            threading.Thread(target=click_func).start()
 
     def abs_x_to_relative_radians(self, abs_x_value,
                                   dead_zone=400,

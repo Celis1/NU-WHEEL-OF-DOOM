@@ -34,35 +34,44 @@ def read_contious_vals(controller):
 
 
 if __name__ == "__main__":
-    # fps = 120 # keep at 120
-    # frame_time = 1.0 / fps  
-    # last_frame_time = time.time()
+    fps = 120 # keep at 120
+    frame_time = 1.0 / fps  
+    last_frame_time = time.time()
 
 
     print("Initializing Wheel of Doom controller...")
     controller = Controller()
 
     # Make it a daemon thread - it will die when main program exits
-    temp = threading.Thread(target=read_contious_vals, args=(controller,))
+    # temp = threading.Thread(target=read_contious_vals, args=(controller,))
+    temp = threading.Thread(target=read_controller_thread, args=(controller,))
     temp.daemon = True  # This line makes it exit when main program exits
     temp.start()
 
-
+    count = 0
     print("Starting Wheel of Doom controller...")
     try:
         while True:
             current_time = time.time()
-
-            # get controller input
-            controller.read()
-
             print()
-            action_went_though = controller.call_action()
-            # print(controller.current_event)
-            print(controller.get_pressed_buttons_info())
+            # print('starting on count:', count)
+            # get controller input
+            # controller.read()
+
             
+            # action_went_though = controller.call_action()
+            # # print(controller.current_event)
+            # print('vvvvvv DEBUGGING INFO vvvvvvv')
+            # print(controller.get_pressed_btns_info())
+            
+            controller.rotate_mouse(controller.buttons['ABS_X'])
+            controller.update_pedals()
+            action_went_though = controller.call_action()
+
+
 
             last_frame_time = current_time
+            count += 1
 
     except Exception as e:
         print(f"An error occurred: {e}")
