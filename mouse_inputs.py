@@ -19,8 +19,9 @@ class GameScreenMouse:
         self.current_radius = self.default_radius
         self.attack_rang = 120  # attack range in pixels
 
-        self.max_radius = 450
-        self.radius_modifier = .003
+        self.max_radius = 1000
+        self.max_combat_radius = 400
+        self.radius_modifier = .2
 
         self.lock_mouse = True
         self.unlock_count = 0
@@ -96,7 +97,19 @@ class GameScreenMouse:
                                                       self.center_y,
                                                       self.current_radius,
                                                       starting_angle_radians)
-                                                      
+
+        if X_POS >= self.max_screen_width:
+            X_POS = self.max_screen_width - 100
+        elif X_POS <= 0:
+            X_POS = 10
+
+        if Y_POS >= self.max_screen_height:
+            Y_POS = self.max_screen_height - 100
+        elif Y_POS <= 0:
+            Y_POS = 10
+
+
+
         self.move_mouse(X_POS, Y_POS)
         # print(f"Mouse moved to: ({X_POS}, {Y_POS}) with radians: {radian_val}")
 
@@ -137,7 +150,7 @@ class GameScreenMouse:
     # TODO: MAKE BUCKETS FOR MOUSE INCRAMENTS
     def grow_radius(self, input_val):
         """Increase the radius for mouse movement."""
-        incrament = abs(input_val) * self.radius_modifier
+        incrament = self.radius_modifier
 
         self.current_radius = self.current_radius + incrament
 
@@ -152,9 +165,9 @@ class GameScreenMouse:
          
     def shrink_radius(self, input_val):
         """Decrease the radius for mouse movement."""
-        decrament = abs(input_val) * self.radius_modifier
+        decrament = self.radius_modifier * 2
 
-        self.current_radius = abs(self.current_radius) - decrament
+        self.current_radius = self.current_radius - decrament
 
         if self.current_radius < self.default_radius:
             self.current_radius = self.default_radius
@@ -177,6 +190,12 @@ class GameScreenMouse:
     def set_radius_attack_range(self):
         """Set the radius to the attack range."""
         self.current_radius = self.default_radius + self.attack_rang
+        self.rotate_mouse(self.current_radius, 
+                          starting_angle_radians=self.current_angle)
+        
+    def set_radius_screen_range(self):
+        """Set the radius to the attack range."""
+        self.current_radius = self.max_combat_radius
         self.rotate_mouse(self.current_radius, 
                           starting_angle_radians=self.current_angle)
         

@@ -16,8 +16,8 @@ class Abilitys(GameScreenMouse):
 
     def __init__(self):
         # ALPHATIVE ORDER OF BTN PRESS
-        self.ignore_brake = 0
-        self.ignore_gas = 0
+        self.ignore_gas_count = 0
+        self.ignore_break_count = 0
         self.ignore_count = 60
 
         
@@ -35,6 +35,7 @@ class Abilitys(GameScreenMouse):
             ('BTN_SOUTH',): lambda: self.btn_press('r'),
             ('BTN_NORTH', 'BTN_TL'): lambda: self.btn_press('d'),
             ('BTN_EAST','BTN_TL', ): lambda: self.btn_press('f'),
+            ('BTN_TL','BTN_WEST', ): lambda: self.btn_press('`'),
 
             # lvl abilites
             ('BTN_THUMBL', 'BTN_WEST'): lambda: self.multi_btn_press('q'),
@@ -104,35 +105,49 @@ class Abilitys(GameScreenMouse):
         # brake pedal
         break_val = self.buttons['ABS_Z']
 
+        if self.ignore_gas_count < self.ignore_count:
+            self.ignore_gas_count += 1
+            return
+        
+        elif self.ignore_break_count < self.ignore_count:
+            self.ignore_break_count += 1
+            return
+
 
         if gas_val != 0:
+
             # full throttle is max radius
             if self.buttons['ABS_RZ'] >= 255:
-                self.set_radius_max()
+                self.set_radius_screen_range()
+                self.ignore_gas_count = 0
+
 
             else:
                 self.grow_radius(gas_val)
+
+        elif gas_val == 0:
+            # if the gas is released, we reset the ignore brake counter
+            self.ignore_gas_count = self.ignore_count
             
         
         if break_val != 0:
-
             # full brake is min radius
             if self.buttons['ABS_Z'] >= 255:
                 self.set_radius_attack_range()
-                self.ignore_brake = 0
+                self.ignore_break_count = 0
 
-
-            elif self.ignore_brake < self.ignore_count:
-                if self.ignore_brake < self.ignore_count:
-                    self.ignore_brake += 1
-                    return
-                
             else:
                 self.shrink_radius(break_val)
                 
         elif break_val == 0:
             # if the brake is released, we reset the ignore brake counter
-            self.ignore_brake = self.ignore_count
+            self.ignore_break_count = self.ignore_count
+
+                    # if both are equal or hight than 255
+        if gas_val == break_val and gas_val >= 255:
+            self.set_radius_min()
+            self.ignore_gas_count = -60
+            self.ignore_break_count = -60
                 
     # ---- converting action to on screen effect ----
     def flame_macro(self):
@@ -197,7 +212,7 @@ class ButtonBinding:
 
         # n-key rollover anti ghosting
         self.debounce_time = 0.02  # 1ms debounce time
-        self.combo_timeout = 0.05  # combo window ms
+        self.combo_timeout = 0.06  # combo window ms
         self.curr_combo_time = 0
 
 
@@ -250,7 +265,6 @@ class ButtonBinding:
     def update_btns_active(self, btn_name, btn_value, current_time, dpad_btn=False):
 
         curr_btn_name = btn_name
-        self.curr_combo_time = current_time
         
         self.prev_btns_len = len(self.btn_active)
 
@@ -270,8 +284,13 @@ class ButtonBinding:
             
             self.btn_active.add(curr_btn_name)
 
-        
-
+        # Check if the current combo is still active
+        curr_time = time.time()
+        if curr_time - self.curr_combo_time < self.combo_timeout:
+            print('--->still in combo')
+            self.curr_combo_time = curr_time
+            # self.curr_combo_time = 0
+            return
 
 
         
@@ -377,11 +396,9 @@ class Controller(ButtonBinding, Abilitys):
             # print('previous buttons:', self.prev_btns)
             return
         
-        # # Check if the current combo is still active
-        if time.time() - self.curr_combo_time < self.combo_timeout:
-            print('--->still in combo')
-            # self.curr_combo_time = 0
-            return
+
+        
+
         
         print(f'finally a change---> active buttons: {self.btn_active}\n previous buttons: {self.prev_btns_len}')
 
@@ -399,6 +416,7 @@ class Controller(ButtonBinding, Abilitys):
 
         # single button press
         func = self.abilties.get(pressed_btns, None)
+
         
         if func:
             print('FUNCTION WAS CALLLED ')
