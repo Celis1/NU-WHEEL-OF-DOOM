@@ -21,7 +21,7 @@ class GameScreenMouse:
 
         self.max_radius = 1000
         self.max_combat_radius = 400
-        self.radius_modifier = .2
+        self.radius_modifier = .3
 
         self.lock_mouse = True
         self.unlock_count = 0

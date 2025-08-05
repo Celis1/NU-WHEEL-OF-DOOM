@@ -7,6 +7,7 @@ import time
 import sounddevice as sd
 import soundfile as sf
 import threading
+import random
 
 
 from mouse_inputs import GameScreenMouse
@@ -19,8 +20,9 @@ class Abilitys(GameScreenMouse):
         self.ignore_gas_count = 0
         self.ignore_break_count = 0
         self.ignore_count = 60
+        self.insults = self.read_file_to_array()
+        self.insults_history = []
 
-        
 
         self.abilties = {
             # Clicks
@@ -52,19 +54,21 @@ class Abilitys(GameScreenMouse):
             ('ABS_HAT0Y_UP', 'BTN_TL'): lambda: self.btn_press('s'),
 
             # ping
-            ('BTN_SELECT',): lambda: self.btn_press('u'),
+            ('BTN_SELECT',): lambda: self.btn_press('u'), # self.play_horn_sound(),), # TODO make horn sound play with this
             ('BTN_START',): lambda: self.btn_press('k'),
+            ('BTN_SELECT', 'BTN_TL') : lambda: self.btn_press('h'),
 
             # misc actions
             ('ABS_HAT0Y_UP', 'BTN_THUMBL'): lambda: self.btn_press('o'),
             ('ABS_HAT0X_LEFT', 'BTN_THUMBL'): lambda: self.btn_press('p'),
             ('ABS_HAT0Y_DOWN', 'BTN_THUMBL'): lambda: self.btn_press('b'),
+            ('BTN_START', 'BTN_THUMBL') : self.flame_macro,
 
             # view ally!
-            ('ABS_HAT0Y_UP', 'BTN_THUMBR'): lambda: self.btn_press('f2'),
-            ('ABS_HAT0X_RIGHT', 'BTN_THUMBR'): lambda: self.btn_press('f3'),
-            ('ABS_HAT0Y_DOWN', 'BTN_THUMBR'): lambda: self.btn_press('f4'),
-            ('ABS_HAT0X_LEFT', 'BTN_THUMBR'): lambda: self.btn_press('f5'),
+            ('ABS_HAT0Y_UP', 'BTN_THUMBR'): lambda: self.view_ally('f2'),
+            ('ABS_HAT0X_RIGHT', 'BTN_THUMBR'): lambda: self.view_ally('f3'),
+            ('ABS_HAT0Y_DOWN', 'BTN_THUMBR'): lambda: self.view_ally('f4'),
+            ('ABS_HAT0X_LEFT', 'BTN_THUMBR'): lambda: self.view_ally('f5'),
 
 
             ('BTN_TL', 'BTN_SELECT', 'BTN_START') : lambda: self.btn_press('space'),
@@ -150,10 +154,25 @@ class Abilitys(GameScreenMouse):
             self.ignore_break_count = -60
                 
     # ---- converting action to on screen effect ----
+    def read_file_to_array(self):
+        with open('insults.txt', 'r') as file:
+            lines = file.readlines()
+        
+        # Remove newline characters from each line
+        lines = [line.strip() for line in lines]
+        return lines
+
     def flame_macro(self):
         def flame_macro_thread():
             """Simulate a series of key presses for the all chat flame macro."""
-            basic_text = 'your ass is grass and imma mow it'
+
+            basic_text = random.choice(self.insults)
+            while basic_text in self.insults_history:
+                basic_text = random.choice(self.insults)
+
+            self.insults_history.append(basic_text)
+            if len(self.insults_history) > 7:
+                self.insults_history.pop(0)
 
             # Press Shift + Enter using pydirectinput
             pydirectinput.keyDown('shift')
@@ -172,11 +191,26 @@ class Abilitys(GameScreenMouse):
 
     def play_horn_sound(self):
         """Play a horn sound when the ping button is pressed."""
+
+        print('SOUNDING THE HORN')
         # Load audio file
         data, fs = sf.read('./Audio/test_horn.mp3')
 
         # Play non-blocking
         sd.play(data, fs)
+
+
+    def view_ally(self, keypress):
+        """View an ally by pressing the corresponding key."""
+        
+        def view_ally_thread():
+            """Press the key to view the ally."""
+            pydirectinput.keyDown(keypress)
+            time.sleep(1.5)
+            pydirectinput.keyUp(keypress)
+
+
+        threading.Thread(target=view_ally_thread).start()
 
 
     def btn_press(self, button):
@@ -201,7 +235,8 @@ class ButtonBinding:
     def __init__(self):
         # tracking buttons
         self.btn_active = set()
-        self.prev_btns_len = 0
+        self.btn_held = set()
+        # self.prev_btns_len = 0
 
         self.btn_press_times = {}
         self.held_btns = []
@@ -212,7 +247,7 @@ class ButtonBinding:
 
         # n-key rollover anti ghosting
         self.debounce_time = 0.02  # 1ms debounce time
-        self.combo_timeout = 0.06  # combo window ms
+        self.combo_timeout = 0.03  # combo window ms # TODO this needs to be shortened to we can increase APM
         self.curr_combo_time = 0
 
 
@@ -265,8 +300,9 @@ class ButtonBinding:
     def update_btns_active(self, btn_name, btn_value, current_time, dpad_btn=False):
 
         curr_btn_name = btn_name
+
         
-        self.prev_btns_len = len(self.btn_active)
+        # self.prev_btns_len = len(self.btn_active)
 
         # getting dpad stuff
         if dpad_btn:
@@ -279,18 +315,17 @@ class ButtonBinding:
         if btn_value == 0:
             if curr_btn_name in self.btn_active:
                 self.btn_active.remove(curr_btn_name)
+
+            # checking if button is held #TODO: idk if we need a separate list
+            if curr_btn_name in self.btn_held:
+                self.btn_held.remove(curr_btn_name)
                 
         else:
-            
+            # reset the combo time if the button is pressed
+            self.curr_combo_time = current_time
+
             self.btn_active.add(curr_btn_name)
 
-        # Check if the current combo is still active
-        curr_time = time.time()
-        if curr_time - self.curr_combo_time < self.combo_timeout:
-            print('--->still in combo')
-            self.curr_combo_time = curr_time
-            # self.curr_combo_time = 0
-            return
 
 
         
@@ -334,7 +369,7 @@ class ButtonBinding:
     def get_pressed_btns_info(self):
         """Return the current state of the buttons for debugging."""
 
-        debug_str = f'Active Buttons: {self.btn_active},\nButton States: {self.buttons},\nCurrent Combo Time: {self.curr_combo_time:.3f}s\nPrevious Buttons: {self.prev_btns_len}\n'
+        debug_str = f'Active Buttons: {self.btn_active},\nButton States: {self.buttons},\nCurrent Combo Time: {self.curr_combo_time:.3f}s'
 
 
         return debug_str
@@ -365,6 +400,7 @@ class Controller(ButtonBinding, Abilitys):
                 btns_if_pressed = self.incoming_btn(event.code, event.state)
                 if isinstance(btns_if_pressed, tuple):
                     # unpack the tuple
+                    #TODO: is this how we reset combo time
                     btn_name, btn_value, curr_combo_time = btns_if_pressed
 
                     # print('------READ A CHANGE TO DPAD ------')
@@ -382,37 +418,26 @@ class Controller(ButtonBinding, Abilitys):
 
     def update_action_queue(self):
 
-        print('---Updating action queue----')
+        # print('---Updating action queue----')
 
         if  len(self.btn_active) == 0:
             # if no buttons are active, we return
-            print('.....empty btns active.....')
+            # print('.....empty btns active.....')
             # self.prev_btns = self.btn_active
             return
         
-        if self.prev_btns_len == len(self.btn_active):
-            # if the previous buttons are the same as the current buttons, we return
-            print('no CHANGE in active buttons')
-            # print('previous buttons:', self.prev_btns)
-            return
+        # if self.prev_btns_len == len(self.btn_active):
+        #     # if the previous buttons are the same as the current buttons, we return
+        #     print('no CHANGE in active buttons')
+        #     # print('previous buttons:', self.prev_btns)
+        #     return
         
+        print(f'finally a change---> active buttons: {self.btn_active}')
 
         
-
-        
-        print(f'finally a change---> active buttons: {self.btn_active}\n previous buttons: {self.prev_btns_len}')
-
-        
-        print('WE RAN SOME STUFF ----->')
-
-        print('sorting buttons')
+        # sorting action list to call function
         pressed_btns = tuple(sorted(self.btn_active))
 
-        # print('checking abilityes')
-        # print('------>SORTED NAMES OF ABILTIES:', pressed_btns)
-        print(len(pressed_btns))
-        # now we want to queue the ability
-    # if len(pressed_btns) > 0:
 
         # single button press
         func = self.abilties.get(pressed_btns, None)
@@ -420,18 +445,29 @@ class Controller(ButtonBinding, Abilitys):
         
         if func:
             print('FUNCTION WAS CALLLED ')
-            # print('FOUND AN ACTION PLEZ GOD ------------>')
-            # print(f'Adding single press action: {pressed_btns}')
-            # self.btn_active.clear()
+            self.btn_active.clear()
             self.action_queue.append(func)
-            self.prev_btns_len = len(self.btn_active)
-            # print(f'Action Queue: {len(self.action_queue)}')
+            # self.prev_btns_len = len(self.btn_active)
             
         return
 
         
 
     def call_action(self):
+
+        # verify the combo timer has expired
+        # TODO find correct spot for this 
+        # Check if the current combo is still active
+        curr_time = time.time()
+        if curr_time - self.curr_combo_time < self.combo_timeout:
+            print('--->still in combo')
+            print(f'current time: {curr_time}, combo time: {self.curr_combo_time}, diff: {curr_time - self.curr_combo_time}')
+            print(curr_time - self.curr_combo_time < self.combo_timeout)
+            print(self.btn_active)
+            # self.curr_combo_time = curr_time
+            # self.curr_combo_time = 0
+            return
+
         """Call the action from the queue."""
         self.update_action_queue()
         

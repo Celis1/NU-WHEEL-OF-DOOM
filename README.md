@@ -99,11 +99,13 @@
     # PING
     - (19) OPTION BUTTON: BTN_SELECT = u ping on my way + horn -1-
     - (20) PADDLE L + D-PAD(ANY DIRECTION) + OPTION BUTTON: BTN_SELECT = ping retreat -3-
+    - (21) PADDLE L + OPTION BUTTON: BTN_SELECT = vision ping 
 
-    # MISC ACTIONS
+    # MISC ACTIONS 
     - (21) BACK L + D-PAD UP: ABS_HAT0Y -1 = tab leaderboard -2-
     - (22) BACK L + D-PAD LEFT: ABS_HAT0X -1 = p shop -2-
     - (23) BACK L + D-PAD DOWN: ABS_HAT0Y 1 = b recall -2-
+    - (24) BACK L + SHARE BUTTON: BTN_START = insult macro
 
 
     # VIEW ALLY

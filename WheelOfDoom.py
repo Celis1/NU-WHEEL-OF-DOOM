@@ -53,7 +53,7 @@ if __name__ == "__main__":
     try:
         while True:
             current_time = time.time()
-            print()
+            # print()
             # print('starting on count:', count)
             # get controller input
             # controller.read()
