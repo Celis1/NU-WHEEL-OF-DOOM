@@ -192,7 +192,6 @@ class Abilitys(GameScreenMouse):
     def play_horn_sound(self):
         """Play a horn sound when the ping button is pressed."""
 
-        print('SOUNDING THE HORN')
         # Load audio file
         data, fs = sf.read('./Audio/test_horn.mp3')
 
@@ -307,10 +306,7 @@ class ButtonBinding:
         # getting dpad stuff
         if dpad_btn:
             curr_btn_name = self.get_dpad_direction_name(btn_name)
-            print(f'WORKIGN WITH ------ D-Pad button: {btn_name} with value: {btn_value}')
 
-        print('CURRENT BUTTON NAME:', curr_btn_name)
-        # check if the value is 0, if so we remove it from the queue
         
         if btn_value == 0:
             if curr_btn_name in self.btn_active:
@@ -393,7 +389,6 @@ class Controller(ButtonBinding, Abilitys):
             if event.ev_type == 'Key' or event.code == 'ABS_HAT0Y' or event.code == 'ABS_HAT0X':
                 # recording that is t dpad with 3 inputs
                 if event.code.startswith('ABS_'):
-                    print(f'------>Dpad button was pressed: {event.code} with value: {event.state}')
                     dpad_btn = True
 
                 # call out update function
@@ -403,7 +398,6 @@ class Controller(ButtonBinding, Abilitys):
                     #TODO: is this how we reset combo time
                     btn_name, btn_value, curr_combo_time = btns_if_pressed
 
-                    # print('------READ A CHANGE TO DPAD ------')
                     self.update_btns_active(btn_name, btn_value, curr_combo_time, dpad_btn)
 
             elif event.ev_type == 'Absolute':
@@ -418,22 +412,10 @@ class Controller(ButtonBinding, Abilitys):
 
     def update_action_queue(self):
 
-        # print('---Updating action queue----')
 
         if  len(self.btn_active) == 0:
-            # if no buttons are active, we return
-            # print('.....empty btns active.....')
-            # self.prev_btns = self.btn_active
             return
-        
-        # if self.prev_btns_len == len(self.btn_active):
-        #     # if the previous buttons are the same as the current buttons, we return
-        #     print('no CHANGE in active buttons')
-        #     # print('previous buttons:', self.prev_btns)
-        #     return
-        
-        print(f'finally a change---> active buttons: {self.btn_active}')
-
+    
         
         # sorting action list to call function
         pressed_btns = tuple(sorted(self.btn_active))
@@ -444,28 +426,17 @@ class Controller(ButtonBinding, Abilitys):
 
         
         if func:
-            print('FUNCTION WAS CALLLED ')
             self.btn_active.clear()
-            self.action_queue.append(func)
-            # self.prev_btns_len = len(self.btn_active)
-            
+            self.action_queue.append(func)            
         return
 
         
 
     def call_action(self):
 
-        # verify the combo timer has expired
-        # TODO find correct spot for this 
         # Check if the current combo is still active
         curr_time = time.time()
         if curr_time - self.curr_combo_time < self.combo_timeout:
-            print('--->still in combo')
-            print(f'current time: {curr_time}, combo time: {self.curr_combo_time}, diff: {curr_time - self.curr_combo_time}')
-            print(curr_time - self.curr_combo_time < self.combo_timeout)
-            print(self.btn_active)
-            # self.curr_combo_time = curr_time
-            # self.curr_combo_time = 0
             return
 
         """Call the action from the queue."""
@@ -476,7 +447,6 @@ class Controller(ButtonBinding, Abilitys):
             # if the action queue is empty, we return
             action = self.action_queue.pop(0)
             action()
-            print(f'ACTION WAS CALLED')
 
         
 

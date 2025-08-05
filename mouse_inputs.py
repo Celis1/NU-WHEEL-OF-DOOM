@@ -111,17 +111,6 @@ class GameScreenMouse:
 
 
         self.move_mouse(X_POS, Y_POS)
-        # print(f"Mouse moved to: ({X_POS}, {Y_POS}) with radians: {radian_val}")
-
-        # if abs_x_value == 0:
-        #     print('ABS_X IS ZERO::', self.unlock_count)
-        #     if self.unlock_count >= self.curr_unlock_value:
-        #         self.lock_mouse = False 
-        #         return
-        
-        #     self.unlock_count += 1
-
-
 
 
     def quarter_step_mouse(self, cardinal_direction='N'):
@@ -200,8 +189,6 @@ class GameScreenMouse:
                           starting_angle_radians=self.current_angle)
         
     def shop_offset(self):
-        print('-----SWAAPPING TO BUY SHOP SIDE-----')
-
         if [self.offset_x, self.offset_y] == [0, 0]:
             if self.curr_side == 'blue':
                 self.offset_x, self.offset_y = self.offset_blue

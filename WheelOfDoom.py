@@ -1,8 +1,6 @@
-import time
 import sounddevice as sd
 import soundfile as sf
 import threading
-
 
 from controller_read import Controller
 
@@ -18,12 +16,13 @@ class WheelOfDoom(Controller):
 
     def init_controller(self):
         temp = threading.Thread(target=self.read_controller_thread, args=(self.controller,))
-        temp.daemon = True  # This line makes it exit when main program exits
+        # This line makes it exit when main program exits
+        temp.daemon = True 
         return temp
     
     def run(self):
         print("Starting Wheel of Doom controller...")
-
+        self.controller_disable = False
         try:
             self.controller_thread.start()
 

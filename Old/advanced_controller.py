@@ -90,7 +90,6 @@ class Controller(ButtonHandler):
         
         # Anti-ghosting: ignore rapid state changes
         if not self.is_debounced(button):
-            print(f"Button {button} state change ignored due to debounce.")
             return
 
         # TODO : ABS_HAT0X AND ABS_HAT0Y BOTH HAVE -1 VALUES WE CANT ADD THE SAME NAME TO THE SET
@@ -180,7 +179,4 @@ if __name__ == "__main__":
     
     while 1:
         events = controller.read()
-        # if controller.current_event['BTN_NORTH'] == 1:
-        #     controller._center_mouse()
-        #     print("Centering mouse...")
         print(controller.get_pressed_buttons_info())
