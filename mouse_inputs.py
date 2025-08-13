@@ -10,162 +10,301 @@ import time
 
 
 
-# from collections import deque
-
 import math
+import time
 import pyautogui
-from collections import deque
+
+class OneEuro:
+    """Tiny One-Euro filter for scalars (here: angle)."""
+    def __init__(self, min_cutoff=1.5, beta=0.3, d_cutoff=1.0):
+        self.min_cutoff = float(min_cutoff)
+        self.beta = float(beta)
+        self.d_cutoff = float(d_cutoff)
+        self.x_prev = None
+        self.dx_prev = None
+        self.t_prev = None
+
+    @staticmethod
+    def _alpha(cutoff, dt):
+        # cutoff in Hz → tau → alpha
+        tau = 1.0 / (2.0 * math.pi * cutoff)
+        return 1.0 / (1.0 + tau / dt)
+
+    def __call__(self, t, x):
+        if self.x_prev is None:
+            self.x_prev, self.dx_prev, self.t_prev = x, 0.0, t
+            return x
+
+        dt = max(t - self.t_prev, 1e-3)
+        # derivative smoothing
+        dx = (x - self.x_prev) / dt
+        a_d = self._alpha(self.d_cutoff, dt)
+        dx_hat = a_d * dx + (1.0 - a_d) * self.dx_prev
+
+        # main smoothing with adaptive cutoff
+        cutoff = self.min_cutoff + self.beta * abs(dx_hat)
+        a = self._alpha(cutoff, dt)
+        x_hat = a * x + (1.0 - a) * self.x_prev
+
+        self.x_prev, self.dx_prev, self.t_prev = x_hat, dx_hat, t
+        return x_hat
+
 
 class SmoothMouseController:
+    def __init__(self,
+                 center_x=None, center_y=None, radius=None,
+                 dead_zone=100,         # larger than noise but < practical small movement
+                 max_angle_degrees=270,  # total sweep from stick extremes
+                 curve=1,             # >1 flattens near center to reduce jitter
+                 min_cutoff=2, beta=0.35, d_cutoff=1.0,  # One-Euro params
+                 pixel_threshold=1):      # hysteresis in screen space
+        # Cache screen
+        sw, sh = pyautogui.size()
+        self.max_screen_width, self.max_screen_height = sw, sh
 
-    def __init__(self):
-        # getting screen size
-        self.max_screen_width, self.max_screen_height = pyautogui.size()
+        # Mapping + shaping
+        self.dead_zone = int(dead_zone)
+        self.max_angle = math.radians(max_angle_degrees)
+        self.curve = float(curve)
 
-        # mouse angles and values
-        self.last_updated_value = 0  # Store the last raw input that caused an update
-        self.last_output = 0.0       # Store the last output radians value
-        self.current_angle = math.pi/2
-        self.default_angle = math.pi/2
+        # Filters
+        self.angle_filter = OneEuro(min_cutoff=min_cutoff, beta=beta, d_cutoff=d_cutoff)
+
+        # State
+        self.default_angle = math.pi / 2  # straight up
+        self.current_angle = self.default_angle
+        self.last_norm = 0.0
+        self.pixel_threshold_sq = float(pixel_threshold * pixel_threshold)
+        self.last_x = None
+        self.last_y = None
+
+        # Raw stick bounds (signed 16-bit typical)
+        self._RAW_MAX = 32767.0
+        self._RAW_MIN = -32768.0
+        self._DZ = float(self.dead_zone)
+
+
+    def _normalize(self, raw):
+        # flip axis if needed (match your original)
+        raw = -float(raw)
+
+        if -self.dead_zone <= raw <= self.dead_zone:
+            return 0.0
+
+        if raw > 0:
+            norm = (raw - self._DZ) / (self._RAW_MAX - self._DZ)
+        else:
+            # FIX: correctly map negative side to [-1, 0]
+            norm = (raw + self._DZ) / (-self._RAW_MIN - self._DZ)
+
+        # clamp and shape
+        norm = max(-1.0, min(1.0, norm))
+        shaped = math.copysign(abs(norm) ** self.curve, norm)
+        return shaped
+
+    def abs_x_to_relative_radians(self, abs_x_value):
+        """
+        Convert ABS_X -> relative radians in [-max_angle, +max_angle] with shaping.
+        No 'sticky' threshold here; the filter handles jitter adaptively.
+        """
+        norm = self._normalize(abs_x_value)
+        self.last_norm = norm
+        return norm * self.max_angle
+
+    def radians_to_mouse_position(self,
+                                  relative_radians, center_x, center_y, radius,
+                                  starting_angle_radians=None,
+                                  t=None):
+        """
+        Smooth the angle in time, then project to circle and apply small
+        pixel hysteresis to avoid micro-updates. Returns (x, y).
+        """
+        if t is None:
+            t = time.perf_counter()
+
+        # Desired angle = base + relative
+        base = self.default_angle if starting_angle_radians is None else float(starting_angle_radians)
+        target_angle = base + float(relative_radians)
+
+        # One-Euro filter (time-based, adaptive)
+        filtered_angle = self.angle_filter(t, target_angle)
+        self.current_angle = filtered_angle
+
+        # Project to circle
+        cx, cy, r = center_x, center_y, radius
+        nx = cx + r * math.cos(filtered_angle)
+        ny = cy - r * math.sin(filtered_angle)  # screen Y grows down
+
+        # Hysteresis to kill tiny pixel-level jitter
+        if self.last_x is not None:
+            dx = nx - self.last_x
+            dy = ny - self.last_y
+            if (dx*dx + dy*dy) < self.pixel_threshold_sq:
+                nx, ny = self.last_x, self.last_y
+        self.last_x, self.last_y = nx, ny
+
+        # Clamp & return ints
+        final_x = max(0, min(self.max_screen_width  - 1, int(nx)))
+        final_y = max(0, min(self.max_screen_height - 1, int(ny)))
+        return final_x, final_y
+
+
+# # from collections import deque
+
+# import math
+# import pyautogui
+# from collections import deque
+
+# class SmoothMouseController:
+
+#     def __init__(self):
+#         # getting screen size
+#         self.max_screen_width, self.max_screen_height = pyautogui.size()
+
+#         # mouse angles and values
+#         self.last_updated_value = 0  # Store the last raw input that caused an update
+#         self.last_output = 0.0       # Store the last output radians value
+#         self.current_angle = math.pi/2
+#         self.default_angle = math.pi/2
         
-        # For linear interpolation smoothing
-        self.current_x = None
-        self.current_y = None
+#         # For linear interpolation smoothing
+#         self.current_x = None
+#         self.current_y = None
         
-        # For threshold-based updates (performance optimization)
-        self.last_target_x = None
-        self.last_target_y = None
+#         # For threshold-based updates (performance optimization)
+#         self.last_target_x = None
+#         self.last_target_y = None
 
     
-    def abs_x_to_relative_radians(self, abs_x_value,
-                                  dead_zone=100,
-                                  max_angle_degrees=270,
-                                  threshold=200):
-        """
-        Convert ABS_X input directly to relative radians using normalized input
-        Only updates when input moves more than dead_zone amount from last updated value
+#     def abs_x_to_relative_radians(self, abs_x_value,
+#                                   dead_zone=100,
+#                                   max_angle_degrees=270,
+#                                   threshold=200):
+#         """
+#         Convert ABS_X input directly to relative radians using normalized input
+#         Only updates when input moves more than dead_zone amount from last updated value
         
-        Args:
-            abs_x_value: Input value (-32768 to 32767)
-            dead_zone: Range around 0 that counts as "no movement" AND
-                      minimum change required from last updated value
-            max_angle_degrees: Maximum angle in each direction
+#         Args:
+#             abs_x_value: Input value (-32768 to 32767)
+#             dead_zone: Range around 0 that counts as "no movement" AND
+#                       minimum change required from last updated value
+#             max_angle_degrees: Maximum angle in each direction
         
-        Returns:
-            radians: Relative angle from starting position
-                    0 = no movement
-                    positive = clockwise 
-                    negative = counterclockwise
-        """
+#         Returns:
+#             radians: Relative angle from starting position
+#                     0 = no movement
+#                     positive = clockwise 
+#                     negative = counterclockwise
+#         """
 
-        abs_x_value = -abs_x_value 
+#         abs_x_value = -abs_x_value 
 
-        # Check if we've moved enough from the last updated value to warrant an update
-        if abs(abs_x_value - self.last_updated_value) < threshold:
-            return self.last_output
+#         # Check if we've moved enough from the last updated value to warrant an update
+#         if abs(abs_x_value - self.last_updated_value) < threshold:
+#             return self.last_output
         
-        # Dead zone check (center dead zone)
-        if abs(abs_x_value) <= dead_zone:
-            # Update our tracking values
-            self.last_updated_value = abs_x_value
-            self.last_output = 0.0
-            return 0.0
+#         # Dead zone check (center dead zone)
+#         if abs(abs_x_value) <= dead_zone:
+#             # Update our tracking values
+#             self.last_updated_value = abs_x_value
+#             self.last_output = 0.0
+#             return 0.0
         
-        # Convert max angle to radians
-        max_angle_radians = math.radians(max_angle_degrees)
+#         # Convert max angle to radians
+#         max_angle_radians = math.radians(max_angle_degrees)
         
-        # Normalize the input to -1.0 to 1.0 range (outside dead zone)
-        if abs_x_value > dead_zone:
-            # Positive side: map (dead_zone, 32767] to (0, 1]
-            normalized = (abs_x_value - dead_zone) / (32767 - dead_zone)
-        elif abs_x_value < -dead_zone:
-            # Negative side: map [-32768, -dead_zone) to [-1, 0)
-            normalized = (abs_x_value + dead_zone) / (32768 - dead_zone)
-        else:
-            # This shouldn't happen due to dead zone check above
-            normalized = 0.0
+#         # Normalize the input to -1.0 to 1.0 range (outside dead zone)
+#         if abs_x_value > dead_zone:
+#             # Positive side: map (dead_zone, 32767] to (0, 1]
+#             normalized = (abs_x_value - dead_zone) / (32767 - dead_zone)
+#         elif abs_x_value < -dead_zone:
+#             # Negative side: map [-32768, -dead_zone) to [-1, 0)
+#             normalized = (abs_x_value + dead_zone) / (32768 - dead_zone)
+#         else:
+#             # This shouldn't happen due to dead zone check above
+#             normalized = 0.0
         
-        # Clamp to [-1, 1] range
-        normalized = max(-1.0, min(1.0, normalized))
+#         # Clamp to [-1, 1] range
+#         normalized = max(-1.0, min(1.0, normalized))
         
-        # Convert to radians
-        new_output = normalized * max_angle_radians
+#         # Convert to radians
+#         new_output = normalized * max_angle_radians
         
-        # Update our tracking values since we're returning a new value
-        self.last_updated_value = abs_x_value
-        self.last_output = new_output
+#         # Update our tracking values since we're returning a new value
+#         self.last_updated_value = abs_x_value
+#         self.last_output = new_output
         
-        return new_output
+#         return new_output
 
 
-    def radians_to_mouse_position(self, relative_radians, center_x, 
-                                  center_y, radius, 
-                                  starting_angle_radians=None,
-                                  lerp_factor=0.15,
-                                  pixel_threshold=3):
-        """
-        Convert radians to actual mouse coordinates with combined threshold + lerp smoothing
+#     def radians_to_mouse_position(self, relative_radians, center_x, 
+#                                   center_y, radius, 
+#                                   starting_angle_radians=None,
+#                                   lerp_factor=0.15,
+#                                   pixel_threshold=3):
+#         """
+#         Convert radians to actual mouse coordinates with combined threshold + lerp smoothing
         
-        Args:
-            relative_radians: Offset from abs_x_to_relative_radians()
-            starting_angle_radians: Where mouse starts on circle
-            center_x, center_y: Center of the circle
-            radius: Circle radius in pixels
-            lerp_factor: How much to move toward target each frame (0.05-0.3)
-                        Lower = smoother but more lag
-                        Higher = more responsive but less smooth
-            pixel_threshold: Only update target if movement exceeds this many pixels
-                           Reduces unnecessary calculations and micro-movements
+#         Args:
+#             relative_radians: Offset from abs_x_to_relative_radians()
+#             starting_angle_radians: Where mouse starts on circle
+#             center_x, center_y: Center of the circle
+#             radius: Circle radius in pixels
+#             lerp_factor: How much to move toward target each frame (0.05-0.3)
+#                         Lower = smoother but more lag
+#                         Higher = more responsive but less smooth
+#             pixel_threshold: Only update target if movement exceeds this many pixels
+#                            Reduces unnecessary calculations and micro-movements
         
-        Returns:
-            (x, y): Smoothed mouse coordinates
-        """
-        if starting_angle_radians is None:
-            final_angle = self.default_angle + relative_radians
-        else:
-            final_angle = self.current_angle
+#         Returns:
+#             (x, y): Smoothed mouse coordinates
+#         """
+#         if starting_angle_radians is None:
+#             final_angle = self.default_angle + relative_radians
+#         else:
+#             final_angle = self.current_angle
         
-        # Calculate new target coordinates
-        new_target_x = center_x + radius * math.cos(final_angle)
-        new_target_y = center_y - radius * math.sin(final_angle)
+#         # Calculate new target coordinates
+#         new_target_x = center_x + radius * math.cos(final_angle)
+#         new_target_y = center_y - radius * math.sin(final_angle)
         
-        # Initialize if first call
-        if self.current_x is None:
-            self.current_x = new_target_x
-            self.current_y = new_target_y
-            self.last_target_x = new_target_x
-            self.last_target_y = new_target_y
+#         # Initialize if first call
+#         if self.current_x is None:
+#             self.current_x = new_target_x
+#             self.current_y = new_target_y
+#             self.last_target_x = new_target_x
+#             self.last_target_y = new_target_y
         
-        # Check if new target has moved enough to warrant an update (threshold check)
-        if self.last_target_x is not None and self.last_target_y is not None:
-            distance_moved = math.sqrt((new_target_x - self.last_target_x)**2 + 
-                                     (new_target_y - self.last_target_y)**2)
+#         # Check if new target has moved enough to warrant an update (threshold check)
+#         if self.last_target_x is not None and self.last_target_y is not None:
+#             distance_moved = math.sqrt((new_target_x - self.last_target_x)**2 + 
+#                                      (new_target_y - self.last_target_y)**2)
             
-            # Only update target if we've moved beyond threshold
-            if distance_moved >= pixel_threshold:
-                self.last_target_x = new_target_x
-                self.last_target_y = new_target_y
-            else:
-                # Use previous target to avoid micro-movements
-                new_target_x = self.last_target_x
-                new_target_y = self.last_target_y
-        else:
-            # First run, set the target
-            self.last_target_x = new_target_x
-            self.last_target_y = new_target_y
+#             # Only update target if we've moved beyond threshold
+#             if distance_moved >= pixel_threshold:
+#                 self.last_target_x = new_target_x
+#                 self.last_target_y = new_target_y
+#             else:
+#                 # Use previous target to avoid micro-movements
+#                 new_target_x = self.last_target_x
+#                 new_target_y = self.last_target_y
+#         else:
+#             # First run, set the target
+#             self.last_target_x = new_target_x
+#             self.last_target_y = new_target_y
         
-        # Linear interpolation toward target (always lerp for smoothness)
-        self.current_x += (new_target_x - self.current_x) * lerp_factor
-        self.current_y += (new_target_y - self.current_y) * lerp_factor
+#         # Linear interpolation toward target (always lerp for smoothness)
+#         self.current_x += (new_target_x - self.current_x) * lerp_factor
+#         self.current_y += (new_target_y - self.current_y) * lerp_factor
         
-        # Ensure coordinates are within screen bounds
-        final_x = max(0, min(self.max_screen_width - 1, int(self.current_x)))
-        final_y = max(0, min(self.max_screen_height - 1, int(self.current_y)))
+#         # Ensure coordinates are within screen bounds
+#         final_x = max(0, min(self.max_screen_width - 1, int(self.current_x)))
+#         final_y = max(0, min(self.max_screen_height - 1, int(self.current_y)))
 
-        # saving the current angle for future reference
-        self.current_angle = final_angle
+#         # saving the current angle for future reference
+#         self.current_angle = final_angle
 
-        return final_x, final_y
+#         return final_x, final_y
        
 class GameScreenMouse(SmoothMouseController):
     def __init__(self):
