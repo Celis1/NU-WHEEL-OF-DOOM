@@ -17,9 +17,10 @@ class Abilitys(GameScreenMouse):
 
     def __init__(self):
         # ALPHATIVE ORDER OF BTN PRESS
-        self.ignore_gas_count = 0
-        self.ignore_break_count = 0
-        self.ignore_count = 60
+        # self.ignore_gas_count = 0
+        # self.ignore_break_count = 0
+        # self.ignore_count = 60
+        self.last_pedal_held = 0 # -1 break , 1 gas, 0 none
         self.insults = self.read_file_to_array()
         self.insults_history = []
 
@@ -64,6 +65,13 @@ class Abilitys(GameScreenMouse):
             ('ABS_HAT0Y_DOWN', 'BTN_THUMBL'): lambda: self.btn_press('b'),
             ('BTN_START', 'BTN_THUMBL') : self.flame_macro,
 
+            # communicate with team on obj
+            ('ABS_HAT0Y_UP', 'BTN_THUMBL','BTN_THUMBR'): lambda: self.team_coms(1),
+            ('ABS_HAT0X_LEFT', 'BTN_THUMBL','BTN_THUMBR'):lambda: self.team_coms(4),
+            ('ABS_HAT0Y_DOWN', 'BTN_THUMBL','BTN_THUMBR'):lambda: self.team_coms(3),
+            ('ABS_HAT0X_RIGHT', 'BTN_THUMBL','BTN_THUMBR'):lambda: self.team_coms(2),
+
+
             # view ally!
             ('ABS_HAT0Y_UP', 'BTN_THUMBR'): lambda: self.view_ally('f2'),
             ('ABS_HAT0X_RIGHT', 'BTN_THUMBR'): lambda: self.view_ally('f3'),
@@ -104,54 +112,56 @@ class Abilitys(GameScreenMouse):
     }
 
     def update_pedals(self):
+        # # -1 break , 1 gas, 0 none
+        # self.last_pedal_held = 0 
+
         # gas pedal
         gas_val = self.buttons['ABS_RZ']
         # brake pedal
-        break_val = self.buttons['ABS_Z']
+        break_val = self.buttons['ABS_Z'] 
+        # left paddle
+        left_paddle = self.buttons['BTN_THUMBL']
+        
 
-        if self.ignore_gas_count < self.ignore_count:
-            self.ignore_gas_count += 1
+        if self.last_pedal_held == 0 and gas_val == 0 and break_val == 0:
+            # if no pedals are pressed, we return
             return
         
-        elif self.ignore_break_count < self.ignore_count:
-            self.ignore_break_count += 1
-            return
+        # reseting activation switch
+        if break_val == 0:
+            if self.last_pedal_held == -1:
+                self.set_radius('medium')
+                self.last_pedal_held = 0
 
-
-        if gas_val != 0:
-
-            # full throttle is max radius
-            if self.buttons['ABS_RZ'] >= 255:
-                self.set_radius_screen_range()
-                self.ignore_gas_count = 0
-
-
-            else:
-                self.grow_radius(gas_val)
-
-        elif gas_val == 0:
-            # if the gas is released, we reset the ignore brake counter
-            self.ignore_gas_count = self.ignore_count
-            
+        if gas_val == 0:
+            if self.last_pedal_held == 1:
+                self.set_radius('medium')
+                self.last_pedal_held = 0
         
-        if break_val != 0:
-            # full brake is min radius
-            if self.buttons['ABS_Z'] >= 255:
-                self.set_radius_attack_range()
-                self.ignore_break_count = 0
+        
+        if break_val > 0:
+            if self.last_pedal_held == 0:
+                self.set_radius('medium')
+                self.last_pedal_held = -1
 
-            else:
-                self.shrink_radius(break_val)
-                
-        elif break_val == 0:
-            # if the brake is released, we reset the ignore brake counter
-            self.ignore_break_count = self.ignore_count
+            elif self.last_pedal_held == -1 and break_val >= 255  :
+                    self.set_radius('small')
 
-                    # if both are equal or hight than 255
-        if gas_val == break_val and gas_val >= 255:
-            self.set_radius_min()
-            self.ignore_gas_count = -60
-            self.ignore_break_count = -60
+            elif self.last_pedal_held == -1:
+                self.modify_radius(-break_val)
+
+
+        elif gas_val > 0:
+            if self.last_pedal_held == 0:
+                self.set_radius('medium')
+                self.last_pedal_held = 1
+
+            elif self.last_pedal_held == 1 and gas_val >= 255:
+                self.set_radius('large')
+
+            elif self.last_pedal_held == 1:
+                self.modify_radius(gas_val)
+
                 
     # ---- converting action to on screen effect ----
     def read_file_to_array(self):
@@ -161,6 +171,34 @@ class Abilitys(GameScreenMouse):
         # Remove newline characters from each line
         lines = [line.strip() for line in lines]
         return lines
+
+    def team_coms(self, value):
+        def team_coms_thread():
+            """Simulate a series of key presses for the all chat flame macro."""
+            basic_text = ''
+
+            if value == 1:
+                basic_text = 'guys DRAG in 30 SEC'
+            elif value == 2:
+                basic_text = 'guys FIGHT DRAG NOW'
+            elif value == 3:
+                basic_text = 'guys BARON in 30 SEC'
+            elif value == 4:
+                basic_text = 'guys FIGHT BARON NOW'
+
+            pydirectinput.press('enter')
+            
+            
+            time.sleep(0.1)
+            
+            # Type the text
+            pyautogui.write(basic_text)
+            
+            time.sleep(0.2)
+            pydirectinput.press('enter')
+
+        threading.Thread(target=team_coms_thread).start()
+
 
     def flame_macro(self):
         def flame_macro_thread():
@@ -245,8 +283,8 @@ class ButtonBinding:
         self.y_plus = False
 
         # n-key rollover anti ghosting
-        self.debounce_time = 0.02  # 1ms debounce time
-        self.combo_timeout = 0.03  # combo window ms # TODO this needs to be shortened to we can increase APM
+        self.debounce_time = 0.005  # 1ms debounce time
+        self.combo_timeout = 0.01  # combo window ms # TODO this needs to be shortened to we can increase APM
         self.curr_combo_time = 0
 
 
