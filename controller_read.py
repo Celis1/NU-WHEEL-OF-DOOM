@@ -97,6 +97,10 @@ class Abilitys(GameScreenMouse):
             ('BTN_THUMBL', 'BTN_THUMBR', 'BTN_TL', 'BTN_TR'): self.shop_offset,
             ('BTN_SELECT', 'BTN_START', 'BTN_THUMBL') : self.swap_offset_side,
 
+
+            # Mouse Controls
+            ('ABS_HAT0X_LEFT','BTN_THUMBL','BTN_THUMBR', 'BTN_TL') : self.swap_mouse_lock,
+
     }
         
         self.released_abilties = {
