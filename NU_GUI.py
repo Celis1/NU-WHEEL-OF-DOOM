@@ -6,10 +6,10 @@ import io
 from itertools import cycle
 import threading
 import time
+import multiprocessing as mp
 
 # my imports
-from WheelProcess import WheelProcessManager
-# from WheelOfDoom import WheelOfDoom
+from WheelOfDoom import WheelOfDoom
 
 class WheelOfDoomApp:
     def __init__(self, root):
@@ -55,15 +55,14 @@ class WheelOfDoomApp:
         # Load controller disabled GIF since controller starts disabled
         self.load_controller_disabled_gif()
 
-        # Loading my Wheel of Doom controller
-        # Initialize but don't start the wheel
-        self.wheel_manager = WheelProcessManager("./WheelOfDoom.py")
+        self.wheel_of_doom = WheelOfDoom()
+        self.wheel_of_doom.controller.disbale_mouse = True  # Start with mouse disabled
+        self.wheel_of_doom_process = mp.Process(target=self.wheel_of_doom.run)
 
-        
-        # # Set up window closing protocol
-        # self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
-        
     def setup_ui(self):
+        # Start the wheel process
+        self.wheel_of_doom_process.start()
+
         # Main container - use fixed heights to ensure everything fits
         main_frame = tk.Frame(self.root, bg=self.bg_color)
         main_frame.pack(fill=tk.BOTH, expand=True, padx=50, pady=20)
@@ -308,8 +307,7 @@ class WheelOfDoomApp:
             self.controller_btn.configure(text="Controller Disabled", bg='#ff4444')
             
         else:
-            # Start the wheel process
-            self.wheel_manager.start_wheel()
+            
             
             # Switch back to default GIF
             self.load_default_gif()

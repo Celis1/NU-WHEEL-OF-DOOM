@@ -165,15 +165,17 @@ class GameScreenMouse(SmoothMouseController):
         self.curr_radian_val = 0.0
 
         # offsets per side
-        self.offset_x = -90
-        self.offset_y = -45
+        self.offset_x = -80
+        self.offset_y = -20
         self.curr_side = 'blue'
-        self.offset_blue = [-90, -45]
+        self.offset_blue = [-80, -20]
         self.offset_red = [70, -170]
 
         # champion center position
+        print(f' Screen size: {self.max_screen_width}x{self.max_screen_height}')
         self.center_x = (self.max_screen_width // 2) + self.offset_x
         self.center_y = (self.max_screen_height // 2) + self.offset_y
+        print(f' Center position: {self.center_x}, {self.center_y}')
 
     def _center_mouse(self):
         ''' ONLY FOR TESTING PURPOSES '''
