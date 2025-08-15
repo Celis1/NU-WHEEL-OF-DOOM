@@ -193,9 +193,6 @@ class GameScreenMouse(SmoothMouseController):
         elif cardinal_direction == 'W':
             self.default_angle = math.pi
 
-        # Rotate the mouse to the new angle
-        self.rotate_mouse(self.current_radius)
-
     def swap_mouse_lock(self):
         self.disbale_mouse = not self.disbale_mouse
 
@@ -246,8 +243,6 @@ class GameScreenMouse(SmoothMouseController):
         if self.current_radius < self.character_radius:
             self.current_radius = self.character_radius
 
-        self.rotate_mouse(self.current_radius,
-                    starting_angle_radians=self.current_angle)
 
 
     def set_radius(self, radius_size):
@@ -268,19 +263,31 @@ class GameScreenMouse(SmoothMouseController):
             self.current_radius = self.walk_range
 
         
-        self.rotate_mouse(self.current_radius, 
-                          starting_angle_radians=self.current_angle)
       
-    def shop_offset(self):
-        if [self.offset_x, self.offset_y] == [0, 0]:
+    def shop_offset(self, value):
+        # if [self.offset_x, self.offset_y] == [0, 0]:
+        #     if self.curr_side == 'blue':
+        #         self.offset_x, self.offset_y = self.offset_blue
+        #     elif self.curr_side == 'red':
+        #         self.offset_x, self.offset_y = self.offset_red
+
+        # else:
+        #     self.offset_x, self.offset_y = 0, 0
+        
+        # self.center_x = (self.max_screen_width // 2) + self.offset_x
+        # self.center_y = (self.max_screen_height // 2) + self.offset_y
+
+        if value == 0:
+            # self.offset_x, self.offset_y = 0, 0
             if self.curr_side == 'blue':
                 self.offset_x, self.offset_y = self.offset_blue
             elif self.curr_side == 'red':
                 self.offset_x, self.offset_y = self.offset_red
 
-        else:
-            self.offset_x, self.offset_y = 0, 0
-        
+        else: 
+            self.offset_x = -80
+            self.offset_y = 100
+
         self.center_x = (self.max_screen_width // 2) + self.offset_x
         self.center_y = (self.max_screen_height // 2) + self.offset_y
             

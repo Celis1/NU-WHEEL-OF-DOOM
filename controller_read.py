@@ -16,10 +16,7 @@ from mouse_inputs import GameScreenMouse
 class Abilitys(GameScreenMouse):
 
     def __init__(self):
-        # ALPHATIVE ORDER OF BTN PRESS
-        # self.ignore_gas_count = 0
-        # self.ignore_break_count = 0
-        # self.ignore_count = 60
+        self.shop_open = True
         self.last_pedal_held = 0 # -1 break , 1 gas, 0 none
         self.insults = self.read_file_to_array()
         self.insults_history = []
@@ -61,7 +58,7 @@ class Abilitys(GameScreenMouse):
 
             # misc actions
             ('ABS_HAT0Y_UP', 'BTN_THUMBL'): lambda: self.btn_press('o'),
-            ('ABS_HAT0X_LEFT', 'BTN_THUMBL'): lambda: self.btn_press('p'),
+            ('ABS_HAT0X_LEFT', 'BTN_THUMBL'): self.open_shop, #TODO 
             ('ABS_HAT0Y_DOWN', 'BTN_THUMBL'): lambda: self.btn_press('b'),
             ('BTN_START', 'BTN_THUMBL') : self.flame_macro,
 
@@ -165,6 +162,21 @@ class Abilitys(GameScreenMouse):
 
             elif self.last_pedal_held == 1:
                 self.modify_radius(gas_val)
+
+
+    def open_shop(self):
+        self.btn_press('p')
+        self.shop_open = not self.shop_open
+        
+        if self.shop_open:
+
+            self.shop_offset(0)
+        else:
+            self.shop_offset(1)
+
+        
+
+
 
                 
     # ---- converting action to on screen effect ----
