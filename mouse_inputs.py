@@ -83,6 +83,11 @@ class SmoothMouseController:
         self._RAW_MIN = -32768.0
         self._DZ = float(self.dead_zone)
 
+        # if the wheel behaves like a mouse
+        self.wheel_mouse_locked = 0 # -1 , 0 , 1
+
+        
+
 
     def _normalize(self, raw):
         # flip axis if needed (match your original)
@@ -100,6 +105,7 @@ class SmoothMouseController:
         # clamp and shape
         norm = max(-1.0, min(1.0, norm))
         shaped = math.copysign(abs(norm) ** self.curve, norm)
+        
         return shaped
 
     def abs_x_to_relative_radians(self, abs_x_value):
@@ -107,9 +113,28 @@ class SmoothMouseController:
         Convert ABS_X -> relative radians in [-max_angle, +max_angle] with shaping.
         No 'sticky' threshold here; the filter handles jitter adaptively.
         """
+        # getting the norm value
         norm = self._normalize(abs_x_value)
         self.last_norm = norm
-        return norm * self.max_angle
+
+
+        # basic wheel mouse locking function
+        if self.wheel_mouse_locked == 0:
+            if norm <= -.9:
+                self.wheel_mouse_locked = -1
+            elif norm >= .9:
+                self.wheel_mouse_locked = 1
+
+        elif self.wheel_mouse_locked == -1:
+            if norm > 0:
+                self.wheel_mouse_locked = 0
+
+        elif self.wheel_mouse_locked == 1:
+            if norm < 0:
+                self.wheel_mouse_locked = 0
+
+
+        return norm * self.max_angle # TODO : verify max angle does not interfeare with continous rotation
 
     def radians_to_mouse_position(self,
                                   relative_radians, center_x, center_y, radius,
@@ -162,7 +187,7 @@ class GameScreenMouse(SmoothMouseController):
         
         self.disbale_mouse = False
 
-        self.curr_radian_val = 0.0
+        self.last_radian_val = 0.0
 
         # offsets per side
         self.offset_x = -80
@@ -200,18 +225,46 @@ class GameScreenMouse(SmoothMouseController):
         self.disbale_mouse = not self.disbale_mouse
 
     def rotate_mouse(self, abs_x_value, starting_angle_radians=None):
+        # abs_x_value = value of steering wheel turning 
+
 
         # check if mouse is disabled
         if self.disbale_mouse:
             return       
 
         radian_val = self.abs_x_to_relative_radians(int(abs_x_value))
+
+        # TODO check if wheel mouse lock is enabled
+
+        if self.wheel_mouse_locked == 0:
+            # current_angle = math.degrees(radian_val)
+            pass
+
+        elif self.wheel_mouse_locked != 0:
+            self.last_radian_val += self._normalize(abs_x_value)/270
+            radian_val = self.last_radian_val
+            print(f'Radian value: {radian_val}, Current angle: {self.current_angle}')
+            
+            
+
+        # elif self.wheel_mouse_locked == 1:
+            
+            
+            
+        #     self.current_angle = math.degrees(angle_radians)
+        #     pass
         
+
+        
+
         X_POS, Y_POS = self.radians_to_mouse_position(radian_val,
                                                     self.center_x,
                                                     self.center_y,
                                                     self.current_radius,
                                                     starting_angle_radians)
+        
+
+        self.last_radian_val = radian_val
 
         if X_POS >= self.max_screen_width:
             X_POS = self.max_screen_width - 100
