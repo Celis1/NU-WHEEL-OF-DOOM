@@ -222,12 +222,6 @@ class GameScreenMouse(SmoothMouseController):
 
         self.move_mouse(X_POS, Y_POS)
 
-    # def absolute_mouse_move(self):
-    #     # start by moving mouse to correct position
-    #     items_cord_x = 1070
-    #     items_cord_y = 960
-        
-    #     self.move_mouse(items_cord_x, items_cord_y)
 
     def modify_radius(self, input_val):
 
@@ -265,17 +259,6 @@ class GameScreenMouse(SmoothMouseController):
         
       
     def shop_offset(self, value):
-        # if [self.offset_x, self.offset_y] == [0, 0]:
-        #     if self.curr_side == 'blue':
-        #         self.offset_x, self.offset_y = self.offset_blue
-        #     elif self.curr_side == 'red':
-        #         self.offset_x, self.offset_y = self.offset_red
-
-        # else:
-        #     self.offset_x, self.offset_y = 0, 0
-        
-        # self.center_x = (self.max_screen_width // 2) + self.offset_x
-        # self.center_y = (self.max_screen_height // 2) + self.offset_y
 
         if value == 0:
             # self.offset_x, self.offset_y = 0, 0

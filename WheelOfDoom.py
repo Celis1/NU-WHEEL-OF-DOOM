@@ -4,14 +4,31 @@ import threading
 
 from controller_read import Controller
 
+
+
+import time
+
+def rate_counter(name="rate", window=1.0):
+    def deco(fn):
+        count, start = 0, time.perf_counter()
+        def wrapped(*a, **kw):
+            nonlocal count, start
+            count += 1
+            now = time.perf_counter()
+            if now - start >= window:
+                print(f"{name}: {count/(now-start):.0f} calls/sec")
+                count, start = 0, now
+            return fn(*a, **kw)
+        return wrapped
+    return deco
+
 class WheelOfDoom(Controller):
     def __init__(self):
         self.controller = Controller()
         self.controller_thread = self.init_controller()
-        self.controller_disable = False
 
     def read_controller_thread(self, controller):
-        while not self.controller_disable:
+        while True:
             controller.read()
 
     def init_controller(self):
@@ -22,11 +39,10 @@ class WheelOfDoom(Controller):
     
     def run(self):
         print("Starting Wheel of Doom controller...")
-        self.controller_disable = False
         try:
             self.controller_thread.start()
 
-            while not self.controller_disable:
+            while True:
                 self.controller.rotate_mouse(self.controller.buttons['ABS_X'])
                 self.controller.update_pedals()
                 action_went_though = self.controller.call_action()

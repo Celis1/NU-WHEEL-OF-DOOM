@@ -440,6 +440,14 @@ class Controller(ButtonBinding, Abilitys):
 
         for event in events:
 
+            # if event.code == 'ABS_X':
+            #     # we want to update the mouse position
+            #     self.rotate_mouse(self.buttons['ABS_X'])
+
+            # if event.code == 'ABS_RZ' or event.code == 'ABS_Z':
+            #     # we want to update the pedals
+            #     self.update_pedals()
+
             if event.ev_type == 'Key' or event.code == 'ABS_HAT0Y' or event.code == 'ABS_HAT0X':
                 # recording that is t dpad with 3 inputs
                 if event.code.startswith('ABS_'):
