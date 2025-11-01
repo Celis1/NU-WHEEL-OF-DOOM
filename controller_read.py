@@ -7,6 +7,7 @@ import time
 import sounddevice as sd
 import soundfile as sf
 import threading
+import random
 
 
 from mouse_inputs import GameScreenMouse
@@ -15,60 +16,71 @@ from mouse_inputs import GameScreenMouse
 class Abilitys(GameScreenMouse):
 
     def __init__(self):
-        # ALPHATIVE ORDER OF BTN PRESS
-        self.ignore_brake = 0
-        self.ignore_gas = 0
-        self.ignore_count = 100
+        self.shop_open = True
+        self.last_pedal_held = 0 # -1 break , 1 gas, 0 none
+        self.insults = self.read_file_to_array()
+        self.insults_history = []
+
 
         self.abilties = {
             # Clicks
             ('BTN_TR',): lambda: self.click_mouse(button='right'),
             ('BTN_THUMBL', 'BTN_TL'): lambda: self.click_mouse(button='left'),
-            ('BTN_TL', 'BTN_TR'): lambda: self.button_press('`'),
+            ('BTN_TL', 'BTN_TR'): lambda: self.click_mouse('right', shift=True),
 
             # core abilites
-            ('BTN_WEST',): lambda: self.button_press('q'),
-            ('BTN_NORTH',): lambda: self.button_press('w'),
-            ('BTN_EAST',): lambda: self.button_press('e'),
-            ('BTN_SOUTH',): lambda: self.button_press('r'),
-            ('BTN_NORTH', 'BTN_TL'): lambda: self.button_press('d'),
-            ('BTN_EAST','BTN_TL', ): lambda: self.button_press('f'),
+            ('BTN_WEST',): lambda: self.btn_press('q'),
+            ('BTN_NORTH',): lambda: self.btn_press('w'),
+            ('BTN_EAST',): lambda: self.btn_press('e'),
+            ('BTN_SOUTH',): lambda: self.btn_press('r'),
+            ('BTN_NORTH', 'BTN_TL'): lambda: self.btn_press('d'),
+            ('BTN_EAST','BTN_TL', ): lambda: self.btn_press('f'),
+            ('BTN_TL','BTN_WEST', ): lambda: self.btn_press('`'),
 
             # lvl abilites
-            ('BTN_THUMBL', 'BTN_WEST'): lambda: self.multi_button_press('q'),
-            ('BTN_NORTH', 'BTN_THUMBL' ): lambda: self.multi_button_press('w'),
-            ('BTN_EAST', 'BTN_THUMBL' ): lambda: self.multi_button_press('e'),
-            ('BTN_SOUTH', 'BTN_THUMBL'): lambda: self.multi_button_press('r'),
+            ('BTN_THUMBL', 'BTN_WEST'): lambda: self.multi_btn_press('q'),
+            ('BTN_NORTH', 'BTN_THUMBL' ): lambda: self.multi_btn_press('w'),
+            ('BTN_EAST', 'BTN_THUMBL' ): lambda: self.multi_btn_press('e'),
+            ('BTN_SOUTH', 'BTN_THUMBL'): lambda: self.multi_btn_press('r'),
 
             # items
-            ('ABS_HAT0X_RIGHT', 'BTN_TL'): lambda: self.button_press('2'),
-            ('ABS_HAT0Y_DOWN', 'BTN_TL'): lambda: self.button_press('3'),
-            ('ABS_HAT0X_LEFT', 'BTN_TL'): lambda: self.button_press('4'),
+            ('ABS_HAT0X_RIGHT', 'BTN_TL'): lambda: self.btn_press('3'),
+            ('ABS_HAT0Y_DOWN', 'BTN_TL'): lambda: self.btn_press('2'),
+            ('ABS_HAT0X_LEFT', 'BTN_TL'): lambda: self.btn_press('4'),
 
             # movement
-            ('ABS_HAT0Y_UP', 'BTN_TL'): lambda: self.button_press('s'),
+            ('ABS_HAT0Y_UP', 'BTN_TL'): lambda: self.btn_press('s'),
 
             # ping
-            ('BTN_SELECT',): lambda: self.button_press('u'),
+            ('BTN_SELECT',): lambda: self.btn_press('u'), # self.play_horn_sound(),), # TODO make horn sound play with this
+            ('BTN_START',): lambda: self.btn_press('k'),
+            ('BTN_SELECT', 'BTN_TL') : lambda: self.btn_press('h'),
 
             # misc actions
-            ('ABS_HAT0Y_UP', 'BTN_THUMBL'): lambda: self.button_press('o'),
-            ('ABS_HAT0X_LEFT', 'BTN_THUMBL'): lambda: self.button_press('p'),
-            ('ABS_HAT0Y_DOWN', 'BTN_THUMBL'): lambda: self.button_press('b'),
+            ('ABS_HAT0Y_UP', 'BTN_THUMBL'): lambda: self.btn_press('o'),
+            ('ABS_HAT0X_LEFT', 'BTN_THUMBL'): self.open_shop, #TODO 
+            ('ABS_HAT0Y_DOWN', 'BTN_THUMBL'): lambda: self.btn_press('b'),
+            ('BTN_START', 'BTN_THUMBL') : self.flame_macro,
+
+            # communicate with team on obj
+            ('ABS_HAT0Y_UP', 'BTN_THUMBL','BTN_THUMBR'): lambda: self.team_coms(1),
+            ('ABS_HAT0X_LEFT', 'BTN_THUMBL','BTN_THUMBR'):lambda: self.team_coms(4),
+            ('ABS_HAT0Y_DOWN', 'BTN_THUMBL','BTN_THUMBR'):lambda: self.team_coms(3),
+            ('ABS_HAT0X_RIGHT', 'BTN_THUMBL','BTN_THUMBR'):lambda: self.team_coms(2),
+
 
             # view ally!
-            # TODO: ADD ALLY VIEW MACRO
-            ('ABS_HAT0Y_UP', 'BTN_THUMBL'): lambda: self.button_press('f2'),
-            ('ABS_HAT0X_RIGHT', 'BTN_THUMBL'): lambda: self.button_press('f3'),
-            ('ABS_HAT0Y_DOWN', 'BTN_THUMBL'): lambda: self.button_press('f4'),
-            ('ABS_HAT0X_LEFT', 'BTN_THUMBL'): lambda: self.button_press('f5'),
+            ('ABS_HAT0Y_UP', 'BTN_THUMBR'): lambda: self.view_ally('f2'),
+            ('ABS_HAT0X_RIGHT', 'BTN_THUMBR'): lambda: self.view_ally('f3'),
+            ('ABS_HAT0Y_DOWN', 'BTN_THUMBR'): lambda: self.view_ally('f4'),
+            ('ABS_HAT0X_LEFT', 'BTN_THUMBR'): lambda: self.view_ally('f5'),
 
 
-            ('BTN_TL', 'BTN_SELECT', 'BTN_START') : lambda: self.button_press('space'),
+            ('BTN_TL', 'BTN_SELECT', 'BTN_START') : lambda: self.btn_press('space'),
             ('BTN_SELECT', 'BTN_START', 'BTN_THUMBL') : self.swap_offset_side,
 
             # mouse motions
-            ('BTN_SELECT', 'BTN_START') : lambda: self.button_press('space'),
+            ('BTN_SELECT', 'BTN_START') : lambda: self.btn_press('space'),
             # ('BTN_THUMBL', 'BTN_SELECT', 'BTN_START') : self.swap_offset_side,
 
             # --------- DPAD ---------
@@ -81,59 +93,140 @@ class Abilitys(GameScreenMouse):
             # offset
             ('BTN_THUMBL', 'BTN_THUMBR', 'BTN_TL', 'BTN_TR'): self.shop_offset,
             ('BTN_SELECT', 'BTN_START', 'BTN_THUMBL') : self.swap_offset_side,
-            
+
+
+            # Mouse Controls
+            ('ABS_HAT0X_LEFT','BTN_THUMBL','BTN_THUMBR', 'BTN_TL') : self.swap_mouse_lock,
 
     }
         
-    def update_pedals(self):
+        self.released_abilties = {
 
+            ('ABS_HAT0Y_UP', 'BTN_THUMBR'): lambda: self.btn_press('f2'),
+            ('ABS_HAT0X_RIGHT', 'BTN_THUMBR'): lambda: self.btn_press('f3'),
+            ('ABS_HAT0Y_DOWN', 'BTN_THUMBR'): lambda: self.btn_press('f4'),
+            ('ABS_HAT0X_LEFT', 'BTN_THUMBR'): lambda: self.btn_press('f5'),
+
+
+
+
+    }
+
+    def update_pedals(self):
+        # # -1 break , 1 gas, 0 none
+        # self.last_pedal_held = 0 
 
         # gas pedal
         gas_val = self.buttons['ABS_RZ']
         # brake pedal
-        break_val = self.buttons['ABS_Z']
-
-
-        if gas_val != 0:
-            # full throttle is max radius
-            if self.buttons['ABS_RZ'] >= 255:
-                self.set_radius_max()
-            #     self.ignore_gas = 0
-
-            # if self.ignore_gas < self.ignore_count:
-            #     self.ignore_gas += 1
-            #     return
-            
-            self.grow_radius(gas_val)
-            
+        break_val = self.buttons['ABS_Z'] 
+        # left paddle
+        left_paddle = self.buttons['BTN_THUMBL']
         
-        if break_val != 0:
 
-            # full brake is min radius
-            if self.buttons['ABS_Z'] >= 255:
-                self.set_radius_attack_range()
-                self.ignore_brake = 0
+        if self.last_pedal_held == 0 and gas_val == 0 and break_val == 0:
+            # if no pedals are pressed, we return
+            return
+        
+        # reseting activation switch
+        if break_val == 0:
+            if self.last_pedal_held == -1:
+                self.set_radius('medium')
+                self.last_pedal_held = 0
+
+        if gas_val == 0:
+            if self.last_pedal_held == 1:
+                self.set_radius('medium')
+                self.last_pedal_held = 0
+        
+        
+        if break_val > 0:
+            if self.last_pedal_held == 0:
+                self.set_radius('medium')
+                self.last_pedal_held = -1
+
+            elif self.last_pedal_held == -1 and break_val >= 255  :
+                    self.set_radius('small')
+
+            elif self.last_pedal_held == -1:
+                self.modify_radius(-break_val)
 
 
-            if self.ignore_brake < self.ignore_count:
-                if self.ignore_brake < self.ignore_count:
-                    self.ignore_brake += 1
-                    return
+        elif gas_val > 0:
+            if self.last_pedal_held == 0:
+                self.set_radius('medium')
+                self.last_pedal_held = 1
+
+            elif self.last_pedal_held == 1 and gas_val >= 255:
+                self.set_radius('large')
+
+            elif self.last_pedal_held == 1:
+                self.modify_radius(gas_val)
+
+
+    def open_shop(self):
+        self.btn_press('p')
+        self.shop_open = not self.shop_open
+        
+        if self.shop_open:
+
+            self.shop_offset(0)
+        else:
+            self.shop_offset(1)
+
+        
+
+
+
                 
-            self.shrink_radius(break_val)
-                
-        elif break_val == 0:
-            # if the brake is released, we reset the ignore brake counter
-            self.ignore_brake = self.ignore_count
-                
-            
-            
-    
     # ---- converting action to on screen effect ----
+    def read_file_to_array(self):
+        with open('insults.txt', 'r') as file:
+            lines = file.readlines()
+        
+        # Remove newline characters from each line
+        lines = [line.strip() for line in lines]
+        return lines
+
+    def team_coms(self, value):
+        def team_coms_thread():
+            """Simulate a series of key presses for the all chat flame macro."""
+            basic_text = ''
+
+            if value == 1:
+                basic_text = 'guys DRAG in 30 SEC'
+            elif value == 2:
+                basic_text = 'guys FIGHT DRAG NOW'
+            elif value == 3:
+                basic_text = 'guys BARON in 30 SEC'
+            elif value == 4:
+                basic_text = 'guys FIGHT BARON NOW'
+
+            pydirectinput.press('enter')
+            
+            
+            time.sleep(0.1)
+            
+            # Type the text
+            pyautogui.write(basic_text)
+            
+            time.sleep(0.2)
+            pydirectinput.press('enter')
+
+        threading.Thread(target=team_coms_thread).start()
+
+
     def flame_macro(self):
         def flame_macro_thread():
             """Simulate a series of key presses for the all chat flame macro."""
-            basic_text = 'your ass is grass and imma mow it'
+
+            basic_text = random.choice(self.insults)
+            while basic_text in self.insults_history:
+                basic_text = random.choice(self.insults)
+
+            self.insults_history.append(basic_text)
+            if len(self.insults_history) > 7:
+                self.insults_history.pop(0)
 
             # Press Shift + Enter using pydirectinput
             pydirectinput.keyDown('shift')
@@ -152,29 +245,42 @@ class Abilitys(GameScreenMouse):
 
     def play_horn_sound(self):
         """Play a horn sound when the ping button is pressed."""
+
         # Load audio file
         data, fs = sf.read('./Audio/test_horn.mp3')
 
         # Play non-blocking
         sd.play(data, fs)
 
-    def button_press(self, button, key_down=False):
-        def button_press_thread():
+
+    def view_ally(self, keypress):
+        """View an ally by pressing the corresponding key."""
+        
+        def view_ally_thread():
+            """Press the key to view the ally."""
+            pydirectinput.keyDown(keypress)
+            time.sleep(1.5)
+            pydirectinput.keyUp(keypress)
+
+
+        threading.Thread(target=view_ally_thread).start()
+
+
+    def btn_press(self, button):
+        def btn_press_thread():
             """Press the button."""
             pydirectinput.press(button)
 
-        threading.Thread(target=button_press_thread).start()
+        threading.Thread(target=btn_press_thread).start()
 
-    def multi_button_press(self, button):
-        def multi_button_press_thread():
+    def multi_btn_press(self, button, shift=False):
+        def multi_btn_press_thread():
             """Press multiple buttons in sequence."""
             pydirectinput.keyDown('ctrl')
             pydirectinput.press(button)
             pydirectinput.keyUp('ctrl')
         
-        threading.Thread(target=multi_button_press_thread).start()
-
-
+        threading.Thread(target=multi_btn_press_thread).start()
 
 
 class ButtonBinding:
@@ -182,15 +288,19 @@ class ButtonBinding:
     def __init__(self):
         # tracking buttons
         self.btn_active = set()
+        self.btn_held = set()
+        # self.prev_btns_len = 0
+
         self.btn_press_times = {}
+        self.held_btns = []
 
         # dpad variables
         self.x_plus = False
         self.y_plus = False
 
         # n-key rollover anti ghosting
-        self.debounce_time = 0.05  # 1ms debounce time
-        self.combo_timeout = 0.1  #combo window ms
+        self.debounce_time = 0.005  # 1ms debounce time
+        self.combo_timeout = 0.01  # combo window ms # TODO this needs to be shortened to we can increase APM
         self.curr_combo_time = 0
 
 
@@ -236,6 +346,7 @@ class ButtonBinding:
         # now we record update the buttons state
         self.buttons[btn_name] = btn_value
         self.btn_press_times[btn_name] = current_time
+        
         return (btn_name, btn_value, current_time)
     
 
@@ -243,23 +354,31 @@ class ButtonBinding:
 
         curr_btn_name = btn_name
 
+        
+        # self.prev_btns_len = len(self.btn_active)
+
         # getting dpad stuff
         if dpad_btn:
             curr_btn_name = self.get_dpad_direction_name(btn_name)
-            print(f'WORKIGN WITH ------ D-Pad button: {btn_name} with value: {btn_value}')
 
-        print('CURRENT BUTTON NAME:', curr_btn_name)
-        # check if the value is 0, if so we remove it from the queue
+        
         if btn_value == 0:
             if curr_btn_name in self.btn_active:
                 self.btn_active.remove(curr_btn_name)
-                # self.curr_combo_time = 0
-        
+
+            # checking if button is held #TODO: idk if we need a separate list
+            if curr_btn_name in self.btn_held:
+                self.btn_held.remove(curr_btn_name)
+                
         else:
+            # reset the combo time if the button is pressed
             self.curr_combo_time = current_time
+
             self.btn_active.add(curr_btn_name)
 
-        return self.curr_combo_time
+
+
+        
     
     def get_dpad_direction_name(self, btn_name):
         """Get the current direction of the D-Pad."""
@@ -297,10 +416,11 @@ class ButtonBinding:
                 return 'ABS_HAT0X_LEFT'
             
 
-    def get_pressed_buttons_info(self):
+    def get_pressed_btns_info(self):
         """Return the current state of the buttons for debugging."""
 
         debug_str = f'Active Buttons: {self.btn_active},\nButton States: {self.buttons},\nCurrent Combo Time: {self.curr_combo_time:.3f}s'
+
 
         return debug_str
     
@@ -320,77 +440,79 @@ class Controller(ButtonBinding, Abilitys):
 
         for event in events:
 
+            # if event.code == 'ABS_X':
+            #     # we want to update the mouse position
+            #     self.rotate_mouse(self.buttons['ABS_X'])
+
+            # if event.code == 'ABS_RZ' or event.code == 'ABS_Z':
+            #     # we want to update the pedals
+            #     self.update_pedals()
+
             if event.ev_type == 'Key' or event.code == 'ABS_HAT0Y' or event.code == 'ABS_HAT0X':
                 # recording that is t dpad with 3 inputs
                 if event.code.startswith('ABS_'):
-                    print(f'------>Dpad button was pressed: {event.code} with value: {event.state}')
                     dpad_btn = True
 
                 # call out update function
                 btns_if_pressed = self.incoming_btn(event.code, event.state)
                 if isinstance(btns_if_pressed, tuple):
                     # unpack the tuple
+                    #TODO: is this how we reset combo time
                     btn_name, btn_value, curr_combo_time = btns_if_pressed
 
-                    print('------READ A CHANGE TO DPAD ------')
                     self.update_btns_active(btn_name, btn_value, curr_combo_time, dpad_btn)
 
             elif event.ev_type == 'Absolute':
                 self.buttons[event.code] = event.state
 
+            dpad_btn = False
+
             
-        # self.get_pressed_buttons_info()
+        # self.get_pressed_btns_info()
 
     
 
     def update_action_queue(self):
 
-        print('---Updating action queue----')
 
         if  len(self.btn_active) == 0:
-            # if no buttons are active, we return
-            print('no buttons active')
             return
-
-        # Check if the current combo is still active
-        if self.curr_combo_time < self.combo_timeout:
-            print('--->combo timeout reached')
-            # self.curr_combo_time = 0
-            return
+    
         
-        print('active buttons', self.btn_active)
+        # sorting action list to call function
+        pressed_btns = tuple(sorted(self.btn_active))
 
-        print('sorting buttons')
-        pressed_buttons = tuple(sorted(self.btn_active))
 
-        print('checking abilityes')
-        print('------>SORTED NAMES OF ABILTIES:', pressed_buttons)
-        print(len(pressed_buttons))
-        # now we want to queue the ability
-        if len(pressed_buttons) > 0:
-            # single button press
-            func = self.abilties.get(pressed_buttons, None)
-            
-            if func:
-                print('FOUND AN ACTION PLEZ GOD ------------>')
-                print(f'Adding single press action: {pressed_buttons}')
-                self.btn_active.clear()
-                self.action_queue.append(func)
-                print(f'Action Queue: {len(self.action_queue)}')
+        # single button press
+        func = self.abilties.get(pressed_btns, None)
+
+        
+        if func:
+            self.btn_active.clear()
+            self.action_queue.append(func)            
+        return
 
         
 
     def call_action(self):
+
+        # Check if the current combo is still active
+        curr_time = time.time()
+        if curr_time - self.curr_combo_time < self.combo_timeout:
+            return
+
         """Call the action from the queue."""
-        # self.curr_combo_time = current_time
-
-
         self.update_action_queue()
-
+        
+        
         if len(self.action_queue) > 0:
             # if the action queue is empty, we return
             action = self.action_queue.pop(0)
             action()
-            print(f'ACTION WAS CALLED')
+
+        
+
+            
+
 
 

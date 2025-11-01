@@ -6,106 +6,180 @@ import math
 import sounddevice as sd
 import soundfile as sf
 import threading
+import time
 
-       
-class GameScreenMouse:
+
+
+import math
+import time
+import pyautogui
+
+class OneEuro:
+    """Tiny One-Euro filter for scalars (here: angle)."""
+    def __init__(self, min_cutoff=1.5, beta=0.3, d_cutoff=1.0):
+        self.min_cutoff = float(min_cutoff)
+        self.beta = float(beta)
+        self.d_cutoff = float(d_cutoff)
+        self.x_prev = None
+        self.dx_prev = None
+        self.t_prev = None
+
+    @staticmethod
+    def _alpha(cutoff, dt):
+        # cutoff in Hz → tau → alpha
+        tau = 1.0 / (2.0 * math.pi * cutoff)
+        return 1.0 / (1.0 + tau / dt)
+
+    def __call__(self, t, x):
+        if self.x_prev is None:
+            self.x_prev, self.dx_prev, self.t_prev = x, 0.0, t
+            return x
+
+        dt = max(t - self.t_prev, 1e-3)
+        # derivative smoothing
+        dx = (x - self.x_prev) / dt
+        a_d = self._alpha(self.d_cutoff, dt)
+        dx_hat = a_d * dx + (1.0 - a_d) * self.dx_prev
+
+        # main smoothing with adaptive cutoff
+        cutoff = self.min_cutoff + self.beta * abs(dx_hat)
+        a = self._alpha(cutoff, dt)
+        x_hat = a * x + (1.0 - a) * self.x_prev
+
+        self.x_prev, self.dx_prev, self.t_prev = x_hat, dx_hat, t
+        return x_hat
+
+
+class SmoothMouseController:
+    def __init__(self,
+                 center_x=None, center_y=None, radius=None,
+                 dead_zone=100,         # larger than noise but < practical small movement
+                 max_angle_degrees=270,  # total sweep from stick extremes
+                 curve=1,             # >1 flattens near center to reduce jitter
+                 min_cutoff=2, beta=0.35, d_cutoff=1.0,  # One-Euro params
+                 pixel_threshold=1):      # hysteresis in screen space
+        # Cache screen
+        sw, sh = pyautogui.size()
+        self.max_screen_width, self.max_screen_height = sw, sh
+
+        # Mapping + shaping
+        self.dead_zone = int(dead_zone)
+        self.max_angle = math.radians(max_angle_degrees)
+        self.curve = float(curve)
+
+        # Filters
+        self.angle_filter = OneEuro(min_cutoff=min_cutoff, beta=beta, d_cutoff=d_cutoff)
+
+        # State
+        self.default_angle = math.pi / 2  # straight up
+        self.current_angle = self.default_angle
+        self.last_norm = 0.0
+        self.pixel_threshold_sq = float(pixel_threshold * pixel_threshold)
+        self.last_x = None
+        self.last_y = None
+
+        # Raw stick bounds (signed 16-bit typical)
+        self._RAW_MAX = 32767.0
+        self._RAW_MIN = -32768.0
+        self._DZ = float(self.dead_zone)
+
+
+    def _normalize(self, raw):
+        # flip axis if needed (match your original)
+        raw = -float(raw)
+
+        if -self.dead_zone <= raw <= self.dead_zone:
+            return 0.0
+
+        if raw > 0:
+            norm = (raw - self._DZ) / (self._RAW_MAX - self._DZ)
+        else:
+            # FIX: correctly map negative side to [-1, 0]
+            norm = (raw + self._DZ) / (-self._RAW_MIN - self._DZ)
+
+        # clamp and shape
+        norm = max(-1.0, min(1.0, norm))
+        shaped = math.copysign(abs(norm) ** self.curve, norm)
+        return shaped
+
+    def abs_x_to_relative_radians(self, abs_x_value):
+        """
+        Convert ABS_X -> relative radians in [-max_angle, +max_angle] with shaping.
+        No 'sticky' threshold here; the filter handles jitter adaptively.
+        """
+        norm = self._normalize(abs_x_value)
+        self.last_norm = norm
+        return norm * self.max_angle
+
+    def radians_to_mouse_position(self,
+                                  relative_radians, center_x, center_y, radius,
+                                  starting_angle_radians=None,
+                                  t=None):
+        """
+        Smooth the angle in time, then project to circle and apply small
+        pixel hysteresis to avoid micro-updates. Returns (x, y).
+        """
+        if t is None:
+            t = time.perf_counter()
+
+        # Desired angle = base + relative
+        base = self.default_angle if starting_angle_radians is None else float(starting_angle_radians)
+        target_angle = base + float(relative_radians)
+
+        # One-Euro filter (time-based, adaptive)
+        filtered_angle = self.angle_filter(t, target_angle)
+        self.current_angle = filtered_angle
+
+        # Project to circle
+        cx, cy, r = center_x, center_y, radius
+        nx = cx + r * math.cos(filtered_angle)
+        ny = cy - r * math.sin(filtered_angle)  # screen Y grows down
+
+        # Hysteresis to kill tiny pixel-level jitter
+        if self.last_x is not None:
+            dx = nx - self.last_x
+            dy = ny - self.last_y
+            if (dx*dx + dy*dy) < self.pixel_threshold_sq:
+                nx, ny = self.last_x, self.last_y
+        self.last_x, self.last_y = nx, ny
+
+        # Clamp & return ints
+        final_x = max(0, min(self.max_screen_width  - 1, int(nx)))
+        final_y = max(0, min(self.max_screen_height - 1, int(ny)))
+        return final_x, final_y
+
+
+class GameScreenMouse(SmoothMouseController):
     def __init__(self):
-        # getting screen size
-        self.max_screen_width, self.max_screen_height = pyautogui.size()
+        super().__init__()
+        # mouse starting position distance from center
+        self.character_radius = 40  # character radius in pixels
+        self.attack_rang = 200  # attack range in pixels
+        self.walk_range = 500  # walk range in pixels
 
-        # radius for mouse movement
-        self.default_radius = 90
-        self.current_radius = self.default_radius
-        self.max_radius = 450
-        self.radius_modifier = .003
-
-        self.lock_mouse = True
-        self.unlock_count = 0
-        self.curr_unlock_value = 10000
-
-        self.current_angle = math.pi/2
-        self.default_angle = math.pi/2
+        self.original_radius = self.attack_rang
+        self.current_radius = self.original_radius 
+        
+        self.disbale_mouse = False
 
         self.curr_radian_val = 0.0
 
         # offsets per side
-        self.offset_x = -90
-        self.offset_y = -60
+        self.offset_x = -80
+        self.offset_y = -20
         self.curr_side = 'blue'
-        self.offset_blue = [-90, -60]
-        self.offset_red = [70, -200]
+        self.offset_blue = [-80, -20]
+        self.offset_red = [70, -170]
 
         # champion center position
+        print(f' Screen size: {self.max_screen_width}x{self.max_screen_height}')
         self.center_x = (self.max_screen_width // 2) + self.offset_x
         self.center_y = (self.max_screen_height // 2) + self.offset_y
+        print(f' Center position: {self.center_x}, {self.center_y}')
 
     def _center_mouse(self):
         ''' ONLY FOR TESTING PURPOSES '''
         self.move_mouse(self.center_x, self.center_y)
-
-    def radians_to_mouse_position(self, relative_radians, center_x, 
-                                  center_y, radius, 
-                                  starting_angle_radians=None):
-        """
-        Convert radians to actual mouse coordinates (FIXED VERSION)
-        
-        Args:
-            relative_radians: Offset from abs_x_to_relative_radians()
-            starting_angle_radians: Where mouse starts on circle
-            center_x, center_y: Center of the circle
-            radius: Circle radius in pixels
-        
-        Returns:
-            (x, y): Mouse coordinates
-        """
-        if starting_angle_radians is None:
-            final_angle = self.default_angle + relative_radians
-        else:
-            final_angle = self.current_angle
-        
-        x = center_x + radius * math.cos(final_angle)
-        # FIX: Flip the Y coordinate to match screen coordinate system
-        y = center_y - radius * math.sin(final_angle)
-        
-        # Ensure coordinates are within screen bounds
-        x = max(0, min(self.max_screen_width - 1, int(x)))
-        y = max(0, min(self.max_screen_height - 1, int(y)))
-
-        # saving the current angle for future reference
-        self.current_angle = final_angle
-
-        return x, y
-    
-    def rotate_mouse(self, abs_x_value, starting_angle_radians=None):
-
-        # if self.lock_mouse:
-        #     if abs_x_value != 0:
-        #         self.unlock_count = 0
-        #         self.lock_mouse = True
-        #     else:
-        #         return
-            
-
-        radian_val = self.abs_x_to_relative_radians(int(abs_x_value))
-        
-        X_POS, Y_POS = self.radians_to_mouse_position(radian_val,
-                                                      self.center_x,
-                                                      self.center_y,
-                                                      self.current_radius,
-                                                      starting_angle_radians)
-                                                      
-        self.move_mouse(X_POS, Y_POS)
-        # print(f"Mouse moved to: ({X_POS}, {Y_POS}) with radians: {radian_val}")
-
-        # if abs_x_value == 0:
-        #     print('ABS_X IS ZERO::', self.unlock_count)
-        #     if self.unlock_count >= self.curr_unlock_value:
-        #         self.lock_mouse = False 
-        #         return
-        
-        #     self.unlock_count += 1
-
-
 
 
     def quarter_step_mouse(self, cardinal_direction='N'):
@@ -119,76 +193,84 @@ class GameScreenMouse:
         elif cardinal_direction == 'W':
             self.default_angle = math.pi
 
-        # Rotate the mouse to the new angle
-        self.rotate_mouse(self.current_radius)
+    def swap_mouse_lock(self):
+        self.disbale_mouse = not self.disbale_mouse
 
-    # TODO: GET ITEM SWAPPING FOR RANKED PLAY
-    def absolute_mouse_move(self):
-        # start by moving mouse to correct position
-        items_cord_x = 1070
-        items_cord_y = 960
+    def rotate_mouse(self, abs_x_value, starting_angle_radians=None):
+
+        # check if mouse is disabled
+        if self.disbale_mouse:
+            return       
+
+        radian_val = self.abs_x_to_relative_radians(int(abs_x_value))
         
-        self.move_mouse(items_cord_x, items_cord_y)
+        X_POS, Y_POS = self.radians_to_mouse_position(radian_val,
+                                                    self.center_x,
+                                                    self.center_y,
+                                                    self.current_radius,
+                                                    starting_angle_radians)
+
+        if X_POS >= self.max_screen_width:
+            X_POS = self.max_screen_width - 100
+        elif X_POS <= 0:
+            X_POS = 10
+
+        if Y_POS >= self.max_screen_height:
+            Y_POS = self.max_screen_height - 100
+        elif Y_POS <= 0:
+            Y_POS = 10
+
+        self.move_mouse(X_POS, Y_POS)
 
 
-    # TODO: MAKE BUCKETS FOR MOUSE INCRAMENTS
-    def grow_radius(self, input_val):
-        """Increase the radius for mouse movement."""
-        incrament = abs(input_val) * self.radius_modifier
+    def modify_radius(self, input_val):
 
-        self.current_radius = self.current_radius + incrament
+        # changing the radius
+        modify_val = input_val
 
-        self.current_radius += incrament
-        if self.current_radius > self.max_radius:
-            self.current_radius = self.max_radius
+        if modify_val < 0:
+            self.current_radius = self.original_radius + modify_val/2
+        else:
+            self.current_radius = self.original_radius + modify_val
 
-        # we now want the mouse to move to the top of the new radius as it grows
 
-        self.rotate_mouse(self.current_radius,
-                            starting_angle_radians=self.current_angle)
-         
-    def shrink_radius(self, input_val):
-        """Decrease the radius for mouse movement."""
-        decrament = abs(input_val) * self.radius_modifier
+        if self.current_radius < self.character_radius:
+            self.current_radius = self.character_radius
 
-        self.current_radius = abs(self.current_radius) - decrament
 
-        if self.current_radius < self.default_radius:
-            self.current_radius = self.default_radius
 
-        self.rotate_mouse(self.current_radius,
-                    starting_angle_radians=self.current_angle)
+    def set_radius(self, radius_size):
+        '''
+        radius_size: string  
+            'small' - charcater radius
+            'medium' - combat radius
+            'large' - clicking radius
+            'verylarge' - drifting radius
+        '''
+        if radius_size == 'small':
+            self.current_radius = self.character_radius
 
-    def set_radius_max(self):
-        """Set the radius to the maximum value."""
-        self.current_radius = self.max_radius
-        self.rotate_mouse(self.current_radius, 
-                          starting_angle_radians=self.current_angle)
+        elif radius_size == 'medium':
+            self.current_radius = self.attack_rang
         
-    def set_radius_min(self):
-        """Reset the radius to the default value."""
-        self.current_radius = self.default_radius
-        self.rotate_mouse(self.current_radius, 
-                          starting_angle_radians=self.current_angle)
-        
-    def set_radius_attack_range(self):
-        """Set the radius to the attack range."""
-        self.current_radius = self.default_radius + 70
-        self.rotate_mouse(self.current_radius, 
-                          starting_angle_radians=self.current_angle)
-        
-    def shop_offset(self):
-        print('-----SWAAPPING TO BUY SHOP SIDE-----')
+        elif radius_size == 'large':
+            self.current_radius = self.walk_range
 
-        if [self.offset_x, self.offset_y] == [0, 0]:
+        
+      
+    def shop_offset(self, value):
+
+        if value == 0:
+            # self.offset_x, self.offset_y = 0, 0
             if self.curr_side == 'blue':
                 self.offset_x, self.offset_y = self.offset_blue
             elif self.curr_side == 'red':
                 self.offset_x, self.offset_y = self.offset_red
 
-        else:
-            self.offset_x, self.offset_y = 0, 0
-        
+        else: 
+            self.offset_x = -80
+            self.offset_y = 100
+
         self.center_x = (self.max_screen_width // 2) + self.offset_x
         self.center_y = (self.max_screen_height // 2) + self.offset_y
             
@@ -213,8 +295,8 @@ class GameScreenMouse:
         """Simulate mouse movement."""
         threading.Thread(target=move_mouse_thread).start()
     
-    def click_mouse(self, button='right'):
-        def click_mouse_thread():
+    def click_mouse(self, button='right', shift=False):
+        def click_func():
             """Click the mouse button."""
             if button == 'right':
                 pydirectinput.mouseDown(button='right')
@@ -223,45 +305,31 @@ class GameScreenMouse:
                 pydirectinput.mouseDown(button='left')
                 pydirectinput.mouseUp(button='left')
 
-        threading.Thread(target=click_mouse_thread).start()
-
-    def abs_x_to_relative_radians(self, abs_x_value,
-                                  dead_zone=400,
-                                  max_angle_degrees=180):
-        """
-        Convert ABS_X input directly to relative radians using normalized input
-        
-        Args:
-            abs_x_value: Input value (-32768 to 32767)
-            dead_zone: Range around 0 that counts as "no movement"
-            max_angle_degrees: Maximum angle in each direction
-        
-        Returns:
-            radians: Relative angle from starting position
-                    0 = no movement
-                    positive = clockwise 
-                    negative = counterclockwise
-        """
-
-        abs_x_value = -abs_x_value 
-
-        # Dead zone check
-        if abs(abs_x_value) <= dead_zone:
-            return 0.0
-        
-        # Convert max angle to radians
-        max_angle_radians = math.radians(max_angle_degrees)
-        
-        # Normalize the input to -1.0 to 1.0 range (outside dead zone)
-        if abs_x_value > 0:
-            # Positive side: map (dead_zone, 32767] to (0, 1]
-            normalized = (abs_x_value - dead_zone) / (32767 - dead_zone)
+        def shift_click_func():
+            pydirectinput.keyDown('shift')
+            pydirectinput.mouseDown(button='right')
+            pydirectinput.keyUp('shift')
+            pydirectinput.mouseUp(button='right')
+  
+        if shift:
+            threading.Thread(target=shift_click_func).start()
         else:
-            # Negative side: map [-32768, -dead_zone) to [-1, 0)
-            normalized = (abs_x_value + dead_zone) / (32767 - dead_zone)
-        
-        # Clamp to [-1, 1] range
-        normalized = max(-1.0, min(1.0, normalized))
-        
-        # Convert to radians
-        return normalized * max_angle_radians
+            threading.Thread(target=click_func).start()
+
+   
+if __name__ == "__main__":
+
+    from controller_read import Controller
+
+    controller = Controller()
+    mouse = GameScreenMouse()
+
+    while True:
+        # Read controller input
+        controller.read()
+
+        # Rotate mouse based on ABS_X input
+        mouse.rotate_mouse(controller.buttons['ABS_X'])
+
+        # Update radius based on ABS_Y input
+        controller.update_pedals()
